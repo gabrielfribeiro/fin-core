@@ -12,8 +12,8 @@ import {
 import type { User } from 'firebase/auth';
 
 interface NavbarProps {
-  activeTab: 'overview' | 'table' | 'apartment' | 'chat';
-  setActiveTab: (tab: 'overview' | 'table' | 'apartment' | 'chat') => void;
+  activeTab: 'overview' | 'table' | 'financing' | 'apartment' | 'chat';
+  setActiveTab: (tab: 'overview' | 'table' | 'financing' | 'apartment' | 'chat') => void;
   user: User | null;
   onLogin: () => void;
   onLogout: () => void;
@@ -72,6 +72,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <TableProperties className="w-4 h-4" />
               <span>Histórico Mensal</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('financing')}
+              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'financing'
+                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-semibold'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              <Building2 className="w-4 h-4" />
+              <span>Financiamentos</span>
             </button>
 
             <button
@@ -157,6 +169,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             Histórico Mensal
+          </button>
+          <button
+            onClick={() => setActiveTab('financing')}
+            className={`px-3 py-1.5 rounded-lg whitespace-nowrap font-medium ${
+              activeTab === 'financing' ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-slate-400 bg-slate-900'
+            }`}
+          >
+            Financiamentos
           </button>
           <button
             onClick={() => setActiveTab('apartment')}

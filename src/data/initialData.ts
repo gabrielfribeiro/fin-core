@@ -1,4 +1,4 @@
-import type { MonthlyRecord, BudgetItem } from '../types/finance';
+import type { MonthlyRecord, BudgetItem, FinancingContract, MRVInstallment } from '../types/finance';
 
 export const INITIAL_MONTHLY_RECORDS: MonthlyRecord[] = [
   {
@@ -1315,3 +1315,113 @@ export const INITIAL_APARTMENT_ITEMS: BudgetItem[] = [
     "status": "planejado"
   }
 ];
+
+export const INITIAL_FINANCING_CONTRACTS: FinancingContract[] = [
+  {
+    id: 'carro',
+    name: 'Financiamento do Veículo',
+    institution: 'Banco Financiador',
+    totalBalance: 115673.40,
+    monthlyPayment: 2570.52,
+    remainingInstallments: 45,
+    category: 'carro',
+    notes: 'Parcelas fixas mensais de R$ 2.570,52 com 45 meses restantes.'
+  },
+  {
+    id: 'ap_caixa',
+    name: 'Financiamento Habitacional (Juros de Obra)',
+    institution: 'CAIXA Econômica Federal',
+    totalBalance: 221251.81,
+    monthlyPayment: 0.00,
+    remainingInstallments: 0,
+    interestRate: '0,72% a.m.',
+    category: 'apartamento_caixa',
+    notes: 'Fase de evolução de obras. Parcela de amortização inicia após a entrega das chaves em 2027.'
+  },
+  {
+    id: 'ap_mrv',
+    name: 'Entrada Parcelada & Taxas ITBI',
+    institution: 'MRV Engenharia',
+    totalBalance: 4741.96,
+    monthlyPayment: 1063.42,
+    remainingInstallments: 1,
+    category: 'apartamento_mrv',
+    notes: 'Total certo restante: R$ 4.741,96 (quitação em Mar/2027). Parcela condicional de adimplência em Abr/2027: R$ 8.450,00.'
+  }
+];
+
+export const INITIAL_MRV_INSTALLMENTS: MRVInstallment[] = [
+  {
+    code: 'M017',
+    dueDate: '08/10/2026',
+    value: 692.48,
+    classification: 'Certo',
+    description: 'Entrada mensal',
+    notes: 'Parcela de entrada contratual'
+  },
+  {
+    code: 'RI18',
+    dueDate: '08/10/2026',
+    value: 370.94,
+    classification: 'Certo',
+    description: 'Taxa ITBI',
+    notes: 'Parcelamento do imposto municipal de transmissão'
+  },
+  {
+    code: 'M018',
+    dueDate: '08/11/2026',
+    value: 681.95,
+    classification: 'Certo',
+    description: 'Entrada mensal',
+    notes: 'Parcela de entrada contratual'
+  },
+  {
+    code: 'RI19',
+    dueDate: '08/11/2026',
+    value: 370.94,
+    classification: 'Certo',
+    description: 'Taxa ITBI',
+    notes: 'Parcelamento do imposto municipal de transmissão'
+  },
+  {
+    code: 'M019',
+    dueDate: '08/12/2026',
+    value: 671.58,
+    classification: 'Certo',
+    description: 'Entrada mensal',
+    notes: 'Parcela de entrada contratual'
+  },
+  {
+    code: 'M020',
+    dueDate: '08/01/2027',
+    value: 661.37,
+    classification: 'Certo',
+    description: 'Entrada mensal',
+    notes: 'Parcela de entrada contratual'
+  },
+  {
+    code: 'M021',
+    dueDate: '08/02/2027',
+    value: 651.30,
+    classification: 'Certo',
+    description: 'Entrada mensal',
+    notes: 'Parcela de entrada contratual'
+  },
+  {
+    code: 'M022',
+    dueDate: '08/03/2027',
+    value: 641.40,
+    classification: 'Certo',
+    description: 'Entrada mensal',
+    notes: 'Última parcela certa da entrada'
+  },
+  {
+    code: 'FP02',
+    dueDate: '08/04/2027',
+    value: 8450.00,
+    classification: 'Condicional',
+    description: 'Desconto sobre adimplência MRV',
+    notes: 'Descrito pela MRV como desconto sobre adimplência; confirmar se será integralmente abatido'
+  }
+];
+
