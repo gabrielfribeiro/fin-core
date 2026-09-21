@@ -13,24 +13,28 @@ import {
 import type { MonthlyRecord, BudgetItem } from './types/finance';
 import { calculateKPIs } from './utils/formatters';
 import { Navbar } from './components/Navbar';
+import { LoginScreen } from './components/LoginScreen';
 import { OverviewCards } from './components/OverviewCards';
 import { FinancialCharts } from './components/FinancialCharts';
 import { MonthlyTable } from './components/MonthlyTable';
 import { ApartmentSection } from './components/ApartmentSection';
 import { AssistantGuide } from './components/AssistantGuide';
-import { ShieldAlert, LogOut, Sparkles } from 'lucide-react';
+import { ShieldAlert, LogOut, Sparkles, Loader2 } from 'lucide-react';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<'overview' | 'table' | 'apartment' | 'chat'>('overview');
   const [records, setRecords] = useState<MonthlyRecord[]>([]);
   const [apartmentItems, setApartmentItems] = useState<BudgetItem[]>([]);
   const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState<boolean>(true);
+  const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     // Auth subscription
     const unsubscribeAuth = subscribeAuth((currentUser) => {
       setUser(currentUser);
+      setAuthLoading(false);
       if (currentUser && !isUserAuthorized(currentUser)) {
         setAuthError(`O e-mail ${currentUser.email} não possui autorização de acesso a este painel.`);
       } else {
@@ -38,25 +42,36 @@ export function App() {
       }
     });
 
-    // Records subscription
+    return () => {
+      unsubscribeAuth();
+    };
+  }, []);
+
+  // Only subscribe to records & data once user is authenticated
+  useEffect(() => {
+    if (!user || !isUserAuthorized(user)) {
+      setRecords([]);
+      setApartmentItems([]);
+      return;
+    }
+
     const unsubscribeRecords = subscribeMonthlyRecords((data) => {
       setRecords(data);
     });
 
-    // Apartment items subscription
     const unsubscribeApartment = subscribeApartmentItems((items) => {
       setApartmentItems(items);
     });
 
     return () => {
-      unsubscribeAuth();
       unsubscribeRecords();
       unsubscribeApartment();
     };
-  }, []);
+  }, [user]);
 
   const handleLogin = async () => {
     try {
+      setIsLoggingIn(true);
       setAuthError(null);
       const loggedUser = await loginWithGoogle();
       if (loggedUser) {
@@ -72,6 +87,8 @@ export function App() {
         return;
       }
       setAuthError(err.message || 'Erro ao realizar login com Google.');
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -81,11 +98,28 @@ export function App() {
     setAuthError(null);
   };
 
-  // KPIs
-  const kpis = calculateKPIs(records);
-  const currentRecord = records.find(r => r.id === '2026-09') || records[records.length - 1];
+  // Loading state while verifying Google session
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#090d16] flex flex-col items-center justify-center space-y-4">
+        <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+        <span className="text-xs text-slate-400 font-medium">Verificando credenciais seguras...</span>
+      </div>
+    );
+  }
 
-  // If user is authenticated but not authorized
+  // Not logged in: Show Login Screen (Zero financial data visible)
+  if (!user) {
+    return (
+      <LoginScreen
+        onLogin={handleLogin}
+        isLoading={isLoggingIn}
+        error={authError}
+      />
+    );
+  }
+
+  // Logged in but not in authorized email whitelist
   if (user && !isUserAuthorized(user)) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
@@ -100,7 +134,7 @@ export function App() {
           <div className="pt-2">
             <button
               onClick={handleLogout}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition cursor-pointer"
             >
               <LogOut className="w-4 h-4" /> Sair da conta
             </button>
@@ -109,6 +143,10 @@ export function App() {
       </div>
     );
   }
+
+  // KPIs calculation for authenticated view
+  const kpis = calculateKPIs(records);
+  const currentRecord = records.find(r => r.id === '2026-09') || records[records.length - 1];
 
   return (
     <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col selection:bg-emerald-500/30 selection:text-emerald-300">
@@ -132,7 +170,7 @@ export function App() {
         </div>
       )}
 
-      {/* Main Content Area */}
+      {/* Main Authenticated Dashboard */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-8">
         {activeTab === 'overview' && (
           <div className="space-y-8 animate-in fade-in duration-300">
@@ -174,7 +212,7 @@ export function App() {
             FinCore • Seu Ecossistema Financeiro Pessoal
           </span>
           <span className="text-slate-600">
-            Alimentado por Antigravity • Atualizações automáticas via Chat
+            Conectado com {user.email} • Atualizações automáticas via Chat
           </span>
         </div>
       </footer>
