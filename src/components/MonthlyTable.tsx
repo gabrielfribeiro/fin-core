@@ -279,12 +279,10 @@ export const MonthlyTable: React.FC<MonthlyTableProps> = ({ records }) => {
                 <span className="text-slate-400">Saldo na Conta Corrente:</span>
                 <strong className="text-cyan-300">{formatCurrency(selectedRecord.liquidAccount)}</strong>
               </div>
-              {selectedRecord.avenue > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Avenue (Dólares):</span>
-                  <strong className="text-indigo-400 font-mono">${selectedRecord.avenue.toFixed(2)}</strong>
-                </div>
-              )}
+              <div className="flex justify-between">
+                <span className="text-slate-400">Patrimônio Líquido:</span>
+                <strong className="text-emerald-400 font-mono">{formatCurrency(selectedRecord.netWorth)}</strong>
+              </div>
               {selectedRecord.notes && (
                 <div className="pt-2 border-t border-slate-800">
                   <span className="text-slate-400 block mb-1">Anotações do Mês:</span>

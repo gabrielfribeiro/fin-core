@@ -62,10 +62,13 @@ export interface KPIStats {
   currentBalance: number;
   savingsItau: number;
   liquidAccount: number;
-  dollarTotalBrl: number;
+  investmentsB3: number;
   totalNetWorth: number;
   savingsRate: number;
   emergencyMonths: number;
   avgExpenses2026: number;
   avgIncome2026: number;
+  goal2027Total: number; // 50000
+  goal2027Current: number;
+  goal2027Percent: number;
 }

@@ -32,13 +32,11 @@ export const calculateKPIs = (records: MonthlyRecord[]): KPIStats => {
 
   const savingsItau = current?.savingsItau || 0;
   const liquidAccount = current?.liquidAccount || 0;
-  const dollarAmount = current?.dollarAmount || 0;
-  const exchangeRate = current?.exchangeRate || 5.5;
-  const dollarTotalBrl = dollarAmount > 0 ? dollarAmount : (current?.avenue || 0) * exchangeRate;
+  const investmentsB3 = 0; // Início da carteira de Ações e FIIs
 
   const totalNetWorth = current?.netWorth > 0
     ? current.netWorth
-    : (savingsItau + liquidAccount + dollarTotalBrl);
+    : (savingsItau + liquidAccount + investmentsB3);
 
   const currentIncome = current?.totalIncome || 0;
   const currentExpenses = current?.totalExpenses || 0;
@@ -47,17 +45,24 @@ export const calculateKPIs = (records: MonthlyRecord[]): KPIStats => {
   const savingsRate = currentIncome > 0 ? (currentBalance / currentIncome) * 100 : 0;
   const emergencyMonths = avgExpenses2026 > 0 ? savingsItau / avgExpenses2026 : 0;
 
+  const goal2027Total = 50000;
+  const goal2027Current = savingsItau + investmentsB3;
+  const goal2027Percent = (goal2027Current / goal2027Total) * 100;
+
   return {
     currentIncome,
     currentExpenses,
     currentBalance,
     savingsItau,
     liquidAccount,
-    dollarTotalBrl,
+    investmentsB3,
     totalNetWorth,
     savingsRate,
     emergencyMonths,
     avgExpenses2026,
     avgIncome2026,
+    goal2027Total,
+    goal2027Current,
+    goal2027Percent,
   };
 };
