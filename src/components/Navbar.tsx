@@ -3,6 +3,7 @@ import {
   LayoutDashboard, 
   TableProperties, 
   Building2, 
+  Landmark,
   MessageSquareCode, 
   LogIn, 
   LogOut, 
@@ -29,11 +30,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   isFirebaseReady,
 }) => {
   return (
-    <header className="sticky top-0 z-50 bg-slate-950/85 backdrop-blur-md border-b border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <header className="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 w-full">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 gap-4">
           {/* Logo & Branding */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 shrink-0">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
               <WalletCards className="w-5 h-5 text-slate-950 font-bold" />
             </div>
@@ -44,7 +45,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   Ao Vivo
                 </span>
               </span>
-              <p className="text-xs text-slate-400 hidden sm:block">Controle Financeiro & Patrimônio</p>
+              <p className="text-xs text-slate-400 hidden lg:block">Controle Financeiro & Patrimônio</p>
             </div>
           </div>
 
@@ -82,7 +83,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              <Building2 className="w-4 h-4" />
+              <Landmark className="w-4 h-4" />
               <span>Financiamentos</span>
             </button>
 
@@ -112,7 +113,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
 
           {/* User Auth Section */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 shrink-0">
             {user ? (
               <div className="flex items-center space-x-3">
                 <div className="hidden sm:flex flex-col items-end">
