@@ -1,4 +1,4 @@
-import type { MonthlyRecord, BudgetItem, FinancingContract, MRVInstallment } from '../types/finance';
+import type { MonthlyRecord, BudgetItem, FinancingContract, MRVInstallment, B3Asset, CreditCardPurchase } from '../types/finance';
 
 export const INITIAL_MONTHLY_RECORDS: MonthlyRecord[] = [
   {
@@ -1424,4 +1424,111 @@ export const INITIAL_MRV_INSTALLMENTS: MRVInstallment[] = [
     notes: 'Descrito pela MRV como desconto sobre adimplência; confirmar se será integralmente abatido'
   }
 ];
+
+export const INITIAL_B3_ASSETS: B3Asset[] = [
+  {
+    ticker: 'MXRF11',
+    name: 'Maxi Renda FII',
+    type: 'fii',
+    segment: 'Papel / Recebíveis',
+    quantity: 0,
+    averagePrice: 10.15,
+    currentPrice: 10.20,
+    monthlyDividendPerShare: 0.10,
+    dividendYieldYearly: 11.8
+  },
+  {
+    ticker: 'XPML11',
+    name: 'XP Malls FII',
+    type: 'fii',
+    segment: 'Shoppings',
+    quantity: 0,
+    averagePrice: 106.50,
+    currentPrice: 107.20,
+    monthlyDividendPerShare: 0.92,
+    dividendYieldYearly: 9.3
+  },
+  {
+    ticker: 'HGLG11',
+    name: 'CSHG Logística FII',
+    type: 'fii',
+    segment: 'Galpões Logísticos',
+    quantity: 0,
+    averagePrice: 161.00,
+    currentPrice: 162.50,
+    monthlyDividendPerShare: 1.10,
+    dividendYieldYearly: 8.8
+  },
+  {
+    ticker: 'BBAS3',
+    name: 'Banco do Brasil S.A.',
+    type: 'acao',
+    segment: 'Setor Bancário',
+    quantity: 0,
+    averagePrice: 27.50,
+    currentPrice: 28.10,
+    monthlyDividendPerShare: 0.22,
+    dividendYieldYearly: 10.2
+  },
+  {
+    ticker: 'ITSA4',
+    name: 'Itaúsa Holding',
+    type: 'acao',
+    segment: 'Holding Financeira',
+    quantity: 0,
+    averagePrice: 10.40,
+    currentPrice: 10.60,
+    monthlyDividendPerShare: 0.08,
+    dividendYieldYearly: 8.9
+  }
+];
+
+export const INITIAL_CARD_PURCHASES: CreditCardPurchase[] = [
+  {
+    id: 'c1',
+    description: 'Supermercado & Feira Mensal',
+    category: 'mercado',
+    installmentValue: 1250.00
+  },
+  {
+    id: 'c2',
+    description: 'Restaurantes, Delivery & Lazer',
+    category: 'lazer',
+    installmentValue: 680.00
+  },
+  {
+    id: 'c3',
+    description: 'Assinaturas (Spotify, Streaming, Academia)',
+    category: 'recorrente',
+    installmentValue: 280.00
+  },
+  {
+    id: 'c4',
+    description: 'Seguro Automotivo',
+    category: 'parcelado',
+    installmentCurrent: 8,
+    installmentTotal: 10,
+    installmentValue: 380.00,
+    endMonth: 'Nov/2026'
+  },
+  {
+    id: 'c5',
+    description: 'Revisão & Manutenção do Carro',
+    category: 'parcelado',
+    installmentCurrent: 4,
+    installmentTotal: 6,
+    installmentValue: 290.00,
+    endMonth: 'Dez/2026'
+  },
+  {
+    id: 'c6',
+    description: 'Eletroportáteis Casa',
+    category: 'parcelado',
+    installmentCurrent: 3,
+    installmentTotal: 5,
+    installmentValue: 180.00,
+    endMonth: 'Jan/2027'
+  }
+];
+
 

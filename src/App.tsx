@@ -8,7 +8,8 @@ import {
   subscribeApartmentItems,
   isFirebaseConfigured,
   isUserAuthorized,
-  seedFirestore
+  seedFirestore,
+  updateMonthlyRecord
 } from './services/firebase';
 import type { MonthlyRecord, BudgetItem } from './types/finance';
 import { calculateKPIs } from './utils/formatters';
@@ -19,12 +20,21 @@ import { FinancialCharts } from './components/FinancialCharts';
 import { MonthlyTable } from './components/MonthlyTable';
 import { FinancingSection } from './components/FinancingSection';
 import { ApartmentSection } from './components/ApartmentSection';
+import { InvestmentsSection } from './components/InvestmentsSection';
+import { CreditCardSection } from './components/CreditCardSection';
+import { MonthlyClosingModal } from './components/MonthlyClosingModal';
 import { AssistantGuide } from './components/AssistantGuide';
-import { INITIAL_FINANCING_CONTRACTS, INITIAL_MRV_INSTALLMENTS } from './data/initialData';
+import { 
+  INITIAL_FINANCING_CONTRACTS, 
+  INITIAL_MRV_INSTALLMENTS,
+  INITIAL_B3_ASSETS,
+  INITIAL_CARD_PURCHASES
+} from './data/initialData';
 import { ShieldAlert, LogOut, Sparkles, Loader2 } from 'lucide-react';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'table' | 'financing' | 'apartment' | 'chat'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'table' | 'financing' | 'investments' | 'card' | 'apartment' | 'chat'>('overview');
+  const [isClosingModalOpen, setIsClosingModalOpen] = useState<boolean>(false);
   const [records, setRecords] = useState<MonthlyRecord[]>([]);
   const [apartmentItems, setApartmentItems] = useState<BudgetItem[]>([]);
   const [user, setUser] = useState<User | null>(null);
@@ -113,6 +123,58 @@ export function App() {
     setAuthError(null);
   };
 
+  const handleConfirmClosing = async (
+    salary: number,
+    bills: number,
+    itauCard: number,
+    reserveAmount: number,
+    b3Amount: number
+  ) => {
+    const targetId = '2026-10';
+    const lastRecord = records[records.length - 1];
+    const existingTarget = records.find(r => r.id === targetId);
+    
+    const previousReserve = existingTarget ? existingTarget.savingsItau : (lastRecord?.savingsItau || 0);
+    const previousB3 = existingTarget ? existingTarget.avenue : (lastRecord?.avenue || 0);
+
+    const newSavingsItau = previousReserve + reserveAmount;
+    const newB3 = previousB3 + b3Amount;
+    const totalExpenses = bills + itauCard;
+    const monthlyBalance = salary - totalExpenses - reserveAmount - b3Amount;
+
+    const updatedRecord: MonthlyRecord = {
+      id: targetId,
+      year: 2026,
+      month: 'Outubro',
+      monthIndex: 10,
+      salary,
+      extraIncome: 0,
+      totalIncome: salary,
+      car: 2570.52,
+      apartment: 1063.42,
+      itau: itauCard,
+      nubank: 0,
+      fuel: 0,
+      looseBills: 0,
+      totalExpenses,
+      monthlyBalance,
+      savingsItau: newSavingsItau,
+      avenue: newB3,
+      liquidAccount: 0,
+      dollarAmount: 0,
+      exchangeRate: 1,
+      netWorth: newSavingsItau + newB3,
+      status: 'completed',
+      notes: 'Fechamento guiado do dia 25 aplicado com divisão 50% Reserva / 50% B3.'
+    };
+
+    try {
+      await updateMonthlyRecord(updatedRecord);
+    } catch (e) {
+      console.error('Erro ao atualizar fechamento:', e);
+    }
+  };
+
   // Loading state while verifying Google session
   if (authLoading) {
     return (
@@ -172,6 +234,7 @@ export function App() {
         user={user}
         onLogin={handleLogin}
         onLogout={handleLogout}
+        onOpenClosing={() => setIsClosingModalOpen(true)}
         isFirebaseReady={isFirebaseConfigured}
       />
 
@@ -215,6 +278,18 @@ export function App() {
           </div>
         )}
 
+        {activeTab === 'investments' && (
+          <div className="animate-in fade-in duration-300">
+            <InvestmentsSection assets={INITIAL_B3_ASSETS} />
+          </div>
+        )}
+
+        {activeTab === 'card' && (
+          <div className="animate-in fade-in duration-300">
+            <CreditCardSection purchases={INITIAL_CARD_PURCHASES} />
+          </div>
+        )}
+
         {activeTab === 'apartment' && (
           <div className="animate-in fade-in duration-300">
             <ApartmentSection items={apartmentItems} />
@@ -227,6 +302,13 @@ export function App() {
           </div>
         )}
       </main>
+
+      {/* Monthly Closing Guided Modal (Dia 25) */}
+      <MonthlyClosingModal
+        isOpen={isClosingModalOpen}
+        onClose={() => setIsClosingModalOpen(false)}
+        onConfirmClosing={handleConfirmClosing}
+      />
 
       {/* Footer */}
       <footer className="border-t border-slate-900 bg-slate-950/60 py-6 text-center text-xs text-slate-500">
