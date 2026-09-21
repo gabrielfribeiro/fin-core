@@ -34,13 +34,16 @@ export const isFirebaseConfigured = Boolean(
   !firebaseConfig.apiKey.includes('SUA_')
 );
 
-// Authorized emails (user can set in .env or via config)
-const authorizedEmail = (import.meta.env.VITE_AUTHORIZED_EMAIL || '').trim().toLowerCase();
+// Authorized email strict verification
+export const getAuthorizedEmail = (): string => {
+  return (import.meta.env.VITE_AUTHORIZED_EMAIL || '').trim().toLowerCase();
+};
 
 export const isUserAuthorized = (user: User | null): boolean => {
   if (!user || !user.email) return false;
-  if (!authorizedEmail) return true; // If no restriction specified, any authenticated user is allowed
-  return user.email.trim().toLowerCase() === authorizedEmail;
+  const authorized = getAuthorizedEmail();
+  if (!authorized) return true; // Se ainda não definido, permite para configuração inicial
+  return user.email.trim().toLowerCase() === authorized;
 };
 
 // Initialize Firebase only if config is present

@@ -32,13 +32,19 @@ export function App() {
 
   useEffect(() => {
     // Auth subscription
-    const unsubscribeAuth = subscribeAuth((currentUser) => {
-      setUser(currentUser);
+    const unsubscribeAuth = subscribeAuth(async (currentUser) => {
       setAuthLoading(false);
-      if (currentUser && !isUserAuthorized(currentUser)) {
-        setAuthError(`O e-mail ${currentUser.email} não possui autorização de acesso a este painel.`);
-      } else {
+      if (currentUser) {
+        if (!isUserAuthorized(currentUser)) {
+          await logoutUser();
+          setUser(null);
+          setAuthError(`Acesso negado: A conta Google (${currentUser.email}) não possui autorização para este painel.`);
+          return;
+        }
+        setUser(currentUser);
         setAuthError(null);
+      } else {
+        setUser(null);
       }
     });
 
@@ -47,7 +53,7 @@ export function App() {
     };
   }, []);
 
-  // Only subscribe to records & data once user is authenticated
+  // Only subscribe to records & data once user is authenticated and authorized
   useEffect(() => {
     if (!user || !isUserAuthorized(user)) {
       setRecords([]);
@@ -75,6 +81,13 @@ export function App() {
       setAuthError(null);
       const loggedUser = await loginWithGoogle();
       if (loggedUser) {
+        if (!isUserAuthorized(loggedUser)) {
+          await logoutUser();
+          setUser(null);
+          setAuthError(`Acesso negado: A conta Google (${loggedUser.email}) não tem permissão de acesso.`);
+          return;
+        }
+        setUser(loggedUser);
         try {
           await seedFirestore();
         } catch (e) {
