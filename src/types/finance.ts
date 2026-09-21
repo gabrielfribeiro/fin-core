@@ -35,16 +35,40 @@ export interface BudgetItem {
   notes?: string;
 }
 
+export interface FinancingContract {
+  id: string;
+  name: string;
+  institution: string;
+  totalBalance: number;
+  monthlyPayment: number;
+  remainingInstallments: number;
+  interestRate?: string;
+  notes?: string;
+  category: 'carro' | 'apartamento_caixa' | 'apartamento_mrv';
+}
+
+export interface MRVInstallment {
+  code: string;
+  dueDate: string;
+  value: number;
+  classification: 'Certo' | 'Condicional';
+  description: string;
+  notes: string;
+}
+
 export interface KPIStats {
   currentIncome: number;
   currentExpenses: number;
   currentBalance: number;
   savingsItau: number;
   liquidAccount: number;
-  dollarTotalBrl: number;
+  investmentsB3: number;
   totalNetWorth: number;
   savingsRate: number;
   emergencyMonths: number;
   avgExpenses2026: number;
   avgIncome2026: number;
+  goal2027Total: number; // 50000
+  goal2027Current: number;
+  goal2027Percent: number;
 }

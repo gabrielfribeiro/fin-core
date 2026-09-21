@@ -17,12 +17,14 @@ import { LoginScreen } from './components/LoginScreen';
 import { OverviewCards } from './components/OverviewCards';
 import { FinancialCharts } from './components/FinancialCharts';
 import { MonthlyTable } from './components/MonthlyTable';
+import { FinancingSection } from './components/FinancingSection';
 import { ApartmentSection } from './components/ApartmentSection';
 import { AssistantGuide } from './components/AssistantGuide';
+import { INITIAL_FINANCING_CONTRACTS, INITIAL_MRV_INSTALLMENTS } from './data/initialData';
 import { ShieldAlert, LogOut, Sparkles, Loader2 } from 'lucide-react';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'table' | 'apartment' | 'chat'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'table' | 'financing' | 'apartment' | 'chat'>('overview');
   const [records, setRecords] = useState<MonthlyRecord[]>([]);
   const [apartmentItems, setApartmentItems] = useState<BudgetItem[]>([]);
   const [user, setUser] = useState<User | null>(null);
@@ -201,6 +203,15 @@ export function App() {
               </p>
             </div>
             <MonthlyTable records={records} />
+          </div>
+        )}
+
+        {activeTab === 'financing' && (
+          <div className="animate-in fade-in duration-300">
+            <FinancingSection
+              contracts={INITIAL_FINANCING_CONTRACTS}
+              mrvSchedule={INITIAL_MRV_INSTALLMENTS}
+            />
           </div>
         )}
 
