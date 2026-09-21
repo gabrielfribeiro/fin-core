@@ -1,0 +1,63 @@
+import type { MonthlyRecord, KPIStats } from '../types/finance';
+
+export const formatCurrency = (value: number | undefined | null): string => {
+  if (value === undefined || value === null || isNaN(value)) return 'R$ 0,00';
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+};
+
+export const formatPercent = (value: number | undefined | null): string => {
+  if (value === undefined || value === null || isNaN(value)) return '0%';
+  return `${value.toFixed(1)}%`;
+};
+
+export const calculateKPIs = (records: MonthlyRecord[]): KPIStats => {
+  // Find current active month (2026-09 or the latest month with salary > 0)
+  const activeRecords = records.filter(r => r.totalIncome > 0 || r.totalExpenses > 0);
+  const current = records.find(r => r.id === '2026-09') || activeRecords[activeRecords.length - 1] || records[0];
+
+  // 2026 stats
+  const records2026 = records.filter(r => r.year === 2026 && (r.totalIncome > 0 || r.totalExpenses > 0));
+  const avgExpenses2026 = records2026.length > 0
+    ? records2026.reduce((acc, r) => acc + r.totalExpenses, 0) / records2026.length
+    : 8730;
+
+  const avgIncome2026 = records2026.length > 0
+    ? records2026.reduce((acc, r) => acc + r.totalIncome, 0) / records2026.length
+    : 10305;
+
+  const savingsItau = current?.savingsItau || 0;
+  const liquidAccount = current?.liquidAccount || 0;
+  const dollarAmount = current?.dollarAmount || 0;
+  const exchangeRate = current?.exchangeRate || 5.5;
+  const dollarTotalBrl = dollarAmount > 0 ? dollarAmount : (current?.avenue || 0) * exchangeRate;
+
+  const totalNetWorth = current?.netWorth > 0
+    ? current.netWorth
+    : (savingsItau + liquidAccount + dollarTotalBrl);
+
+  const currentIncome = current?.totalIncome || 0;
+  const currentExpenses = current?.totalExpenses || 0;
+  const currentBalance = currentIncome - currentExpenses;
+
+  const savingsRate = currentIncome > 0 ? (currentBalance / currentIncome) * 100 : 0;
+  const emergencyMonths = avgExpenses2026 > 0 ? savingsItau / avgExpenses2026 : 0;
+
+  return {
+    currentIncome,
+    currentExpenses,
+    currentBalance,
+    savingsItau,
+    liquidAccount,
+    dollarTotalBrl,
+    totalNetWorth,
+    savingsRate,
+    emergencyMonths,
+    avgExpenses2026,
+    avgIncome2026,
+  };
+};
