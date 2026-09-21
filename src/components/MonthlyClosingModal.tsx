@@ -22,7 +22,7 @@ export const MonthlyClosingModal: React.FC<MonthlyClosingModalProps> = ({
 }) => {
   const [salary, setSalary] = useState<number>(10373.92);
   const [fixedBills, setFixedBills] = useState<number>(3633.94); // Carro + MRV
-  const [itauCard, setItauCard] = useState<number>(3100.00);
+  const [itauCard, setItauCard] = useState<number>(4177.82); // Fatura fechada 21/09/2026
   const [copied, setCopied] = useState<boolean>(false);
 
   if (!isOpen) return null;

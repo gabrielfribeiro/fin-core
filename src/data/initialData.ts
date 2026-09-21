@@ -511,19 +511,19 @@ export const INITIAL_MONTHLY_RECORDS: MonthlyRecord[] = [
     "totalIncome": 10373.92,
     "car": 2561.44,
     "apartment": 3124.58,
-    "itau": 4080.97,
+    "itau": 4177.82,
     "nubank": 0,
     "fuel": 0,
     "looseBills": 177.89,
-    "totalExpenses": 9944.88,
-    "monthlyBalance": 429.0400000000009,
+    "totalExpenses": 10041.73,
+    "monthlyBalance": 332.19,
     "savingsItau": 3124.69,
     "avenue": 0,
     "liquidAccount": 411.54,
     "dollarAmount": 0,
     "exchangeRate": 0,
     "netWorth": 3536.23,
-    "notes": "Regra Salario dia 25",
+    "notes": "Fatura Itaú Black fechada em R$ 4.177,82 (Venc. 28/09/2026)",
     "status": "current"
   },
   {
@@ -1484,50 +1484,167 @@ export const INITIAL_B3_ASSETS: B3Asset[] = [
 ];
 
 export const INITIAL_CARD_PURCHASES: CreditCardPurchase[] = [
+  // 15 Compras Parceladas Reais da Fatura Fechada (21/09/2026)
   {
-    id: 'c1',
-    description: 'Supermercado & Feira Mensal',
-    category: 'mercado',
-    installmentValue: 1250.00
-  },
-  {
-    id: 'c2',
-    description: 'Restaurantes, Delivery & Lazer',
-    category: 'lazer',
-    installmentValue: 680.00
-  },
-  {
-    id: 'c3',
-    description: 'Assinaturas (Spotify, Streaming, Academia)',
-    category: 'recorrente',
-    installmentValue: 280.00
-  },
-  {
-    id: 'c4',
-    description: 'Seguro Automotivo',
+    id: 'p1',
+    description: 'Fisia Nike Eco',
     category: 'parcelado',
-    installmentCurrent: 8,
-    installmentTotal: 10,
-    installmentValue: 380.00,
-    endMonth: 'Nov/2026'
+    installmentCurrent: 5,
+    installmentTotal: 6,
+    installmentValue: 150.58,
+    endMonth: 'Out/2026'
   },
   {
-    id: 'c5',
-    description: 'Revisão & Manutenção do Carro',
+    id: 'p2',
+    description: 'KaBuM! Eletrônicos (Compra 1)',
+    category: 'parcelado',
+    installmentCurrent: 5,
+    installmentTotal: 10,
+    installmentValue: 178.83,
+    endMonth: 'Fev/2027'
+  },
+  {
+    id: 'p3',
+    description: 'KaBuM! Eletrônicos (Compra 2)',
+    category: 'parcelado',
+    installmentCurrent: 5,
+    installmentTotal: 6,
+    installmentValue: 181.67,
+    endMonth: 'Out/2026'
+  },
+  {
+    id: 'p4',
+    description: 'Toss Tennis Club (Educação/Esporte)',
     category: 'parcelado',
     installmentCurrent: 4,
-    installmentTotal: 6,
-    installmentValue: 290.00,
-    endMonth: 'Dez/2026'
+    installmentTotal: 12,
+    installmentValue: 234.38,
+    endMonth: 'Mai/2027'
   },
   {
-    id: 'c6',
-    description: 'Eletroportáteis Casa',
+    id: 'p5',
+    description: 'Mercado Pago - Prospin Vestuário',
+    category: 'parcelado',
+    installmentCurrent: 4,
+    installmentTotal: 10,
+    installmentValue: 186.35,
+    endMonth: 'Mar/2027'
+  },
+  {
+    id: 'p6',
+    description: 'Magazine Luiza (Magalu Uai)',
     category: 'parcelado',
     installmentCurrent: 3,
     installmentTotal: 5,
-    installmentValue: 180.00,
-    endMonth: 'Jan/2027'
+    installmentValue: 73.98,
+    endMonth: 'Nov/2026'
+  },
+  {
+    id: 'p7',
+    description: 'Garage 67 Vestuário',
+    category: 'parcelado',
+    installmentCurrent: 3,
+    installmentTotal: 6,
+    installmentValue: 74.96,
+    endMonth: 'Dez/2026'
+  },
+  {
+    id: 'p8',
+    description: 'PlayStation Network (Sony)',
+    category: 'parcelado',
+    installmentCurrent: 3,
+    installmentTotal: 4,
+    installmentValue: 137.47,
+    endMonth: 'Out/2026'
+  },
+  {
+    id: 'p9',
+    description: 'Ihan Oliveira Saúde / Consulta',
+    category: 'parcelado',
+    installmentCurrent: 2,
+    installmentTotal: 3,
+    installmentValue: 466.66,
+    endMonth: 'Out/2026'
+  },
+  {
+    id: 'p10',
+    description: 'TikTok EBN',
+    category: 'parcelado',
+    installmentCurrent: 2,
+    installmentTotal: 2,
+    installmentValue: 91.80,
+    endMonth: 'Finalizou em Set/2026'
+  },
+  {
+    id: 'p11',
+    description: 'Azul Seguros Automotivo',
+    category: 'parcelado',
+    installmentCurrent: 2,
+    installmentTotal: 10,
+    installmentValue: 370.03,
+    endMonth: 'Mai/2027'
+  },
+  {
+    id: 'p12',
+    description: 'Mercado Livre (Item 1)',
+    category: 'parcelado',
+    installmentCurrent: 2,
+    installmentTotal: 12,
+    installmentValue: 34.42,
+    endMonth: 'Jul/2027'
+  },
+  {
+    id: 'p13',
+    description: 'Mercado Livre (Item 2)',
+    category: 'parcelado',
+    installmentCurrent: 2,
+    installmentTotal: 12,
+    installmentValue: 65.43,
+    endMonth: 'Jul/2027'
+  },
+  {
+    id: 'p14',
+    description: 'Decathlon Maringá',
+    category: 'parcelado',
+    installmentCurrent: 1,
+    installmentTotal: 2,
+    installmentValue: 94.98,
+    endMonth: 'Out/2026'
+  },
+  {
+    id: 'p15',
+    description: 'Amazon Brasil (Vestuário/Compras)',
+    category: 'parcelado',
+    installmentCurrent: 1,
+    installmentTotal: 10,
+    installmentValue: 119.98,
+    endMonth: 'Jun/2027'
+  },
+
+  // Gastos à vista e recorrentes categorizados do mês (Setembro/2026)
+  {
+    id: 'v1',
+    description: 'Supermercados & Farmácia (102 Comercial, Bom Dia, Nissei, RCS)',
+    category: 'mercado',
+    installmentValue: 338.23
+  },
+  {
+    id: 'v2',
+    description: 'Assinaturas Digitais (Google One, Wellhub, Netflix, Spotify, YouTube, Crunchyroll, iFood Club, Itaú Avisa)',
+    category: 'recorrente',
+    installmentValue: 322.64
+  },
+  {
+    id: 'v3',
+    description: 'Combustível ShellBox, Lavagem Scamaro e Serviços',
+    category: 'lazer',
+    installmentValue: 454.52
+  },
+  {
+    id: 'v4',
+    description: 'Restaurantes, Delivery (iFood, Rei da Esfiha, Teresinha Possa) & Lazer',
+    category: 'lazer',
+    installmentValue: 600.91
   }
 ];
 
