@@ -25,16 +25,6 @@ export interface MonthlyRecord {
   status: 'completed' | 'current' | 'projected';
 }
 
-export interface BudgetItem {
-  id: string;
-  name: string;
-  category: 'eletro' | 'movel' | 'reforma' | 'documentacao';
-  estimatedCost: number;
-  actualCost?: number;
-  status: 'planejado' | 'comprado' | 'prioridade';
-  notes?: string;
-}
-
 export interface FinancingContract {
   id: string;
   name: string;
@@ -54,6 +44,38 @@ export interface MRVInstallment {
   classification: 'Certo' | 'Condicional';
   description: string;
   notes: string;
+}
+
+export interface B3Asset {
+  ticker: string;
+  name: string;
+  type: 'fii' | 'acao';
+  segment: string;
+  quantity: number;
+  averagePrice: number;
+  currentPrice: number;
+  monthlyDividendPerShare: number;
+  dividendYieldYearly: number;
+}
+
+export interface CreditCardPurchase {
+  id: string;
+  description: string;
+  category: 'mercado' | 'lazer' | 'recorrente' | 'parcelado';
+  installmentCurrent?: number;
+  installmentTotal?: number;
+  installmentValue: number;
+  endMonth?: string;
+}
+
+export interface MonthlyClosingPlan {
+  monthId: string; // "2026-10"
+  salary: number;
+  fixedBills: number;
+  cardBills: number;
+  surplus: number;
+  toEmergencyReserve: number;
+  toInvestmentsB3: number;
 }
 
 export interface KPIStats {

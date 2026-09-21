@@ -16,8 +16,20 @@ import {
   query,
   orderBy
 } from 'firebase/firestore';
-import type { MonthlyRecord, BudgetItem } from '../types/finance';
-import { INITIAL_MONTHLY_RECORDS, INITIAL_APARTMENT_ITEMS } from '../data/initialData';
+import type { 
+  MonthlyRecord, 
+  FinancingContract, 
+  MRVInstallment, 
+  CreditCardPurchase, 
+  B3Asset 
+} from '../types/finance';
+import { 
+  INITIAL_MONTHLY_RECORDS, 
+  INITIAL_FINANCING_CONTRACTS,
+  INITIAL_MRV_INSTALLMENTS,
+  INITIAL_CARD_PURCHASES,
+  INITIAL_B3_ASSETS
+} from '../data/initialData';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
@@ -42,7 +54,7 @@ export const getAuthorizedEmail = (): string => {
 export const isUserAuthorized = (user: User | null): boolean => {
   if (!user || !user.email) return false;
   const authorized = getAuthorizedEmail();
-  if (!authorized) return true; // Se ainda não definido, permite para configuração inicial
+  if (!authorized) return true;
   return user.email.trim().toLowerCase() === authorized;
 };
 
@@ -79,53 +91,53 @@ export const subscribeAuth = (callback: (user: User | null) => void) => {
   return onAuthStateChanged(auth, callback);
 };
 
-// Firestore listeners with fallback to local storage
-const LOCAL_STORAGE_RECORDS_KEY = 'finance_records_local';
-const LOCAL_STORAGE_ITEMS_KEY = 'finance_apartment_items_local';
-
+// Seed utility: pushes data to Cloud Firestore once authenticated
 export const seedFirestore = async () => {
   if (!db || !isFirebaseConfigured) return;
-  console.log('Semeando Firestore com dados históricos...');
+  console.log('Sincronizando todas as coleções no Cloud Firestore...');
   for (const record of INITIAL_MONTHLY_RECORDS) {
     const docRef = doc(db, 'monthly_records', record.id);
     await setDoc(docRef, record, { merge: true });
   }
-  for (const item of INITIAL_APARTMENT_ITEMS) {
-    const docRef = doc(db, 'apartment_items', item.id);
-    await setDoc(docRef, item, { merge: true });
+  for (const contract of INITIAL_FINANCING_CONTRACTS) {
+    const docRef = doc(db, 'financing_contracts', contract.id);
+    await setDoc(docRef, contract, { merge: true });
   }
-  console.log('Firestore semeado com sucesso!');
+  for (const installment of INITIAL_MRV_INSTALLMENTS) {
+    const docRef = doc(db, 'mrv_installments', installment.code);
+    await setDoc(docRef, installment, { merge: true });
+  }
+  for (const purchase of INITIAL_CARD_PURCHASES) {
+    const docRef = doc(db, 'card_purchases', purchase.id);
+    await setDoc(docRef, purchase, { merge: true });
+  }
+  for (const asset of INITIAL_B3_ASSETS) {
+    const docRef = doc(db, 'b3_assets', asset.ticker);
+    await setDoc(docRef, asset, { merge: true });
+  }
+  console.log('Todas as coleções gravadas com sucesso no Cloud Firestore!');
 };
 
+// 1. Monthly Records (History & Balance)
 export const subscribeMonthlyRecords = (
   callback: (records: MonthlyRecord[]) => void
 ) => {
   if (!db || !isFirebaseConfigured) {
-    // Fallback: Read from LocalStorage or InitialData
-    const local = localStorage.getItem(LOCAL_STORAGE_RECORDS_KEY);
-    if (local) {
-      try {
-        callback(JSON.parse(local));
-      } catch {
-        callback(INITIAL_MONTHLY_RECORDS);
-      }
-    } else {
-      localStorage.setItem(LOCAL_STORAGE_RECORDS_KEY, JSON.stringify(INITIAL_MONTHLY_RECORDS));
-      callback(INITIAL_MONTHLY_RECORDS);
-    }
+    callback(INITIAL_MONTHLY_RECORDS);
     return () => {};
   }
 
   const q = query(collection(db, 'monthly_records'), orderBy('id', 'asc'));
   return onSnapshot(q, async (snapshot) => {
     if (snapshot.empty) {
-      // If Firestore is empty, callback with initial data and attempt seed if authenticated
       callback(INITIAL_MONTHLY_RECORDS);
       if (auth?.currentUser) {
         try {
-          await seedFirestore();
+          for (const record of INITIAL_MONTHLY_RECORDS) {
+            await setDoc(doc(db, 'monthly_records', record.id), record, { merge: true });
+          }
         } catch (e) {
-          console.warn('Auto-seed waiting for permissions:', e);
+          console.warn('Auto-seed monthly_records error:', e);
         }
       }
     } else {
@@ -136,61 +148,169 @@ export const subscribeMonthlyRecords = (
       callback(records);
     }
   }, (err) => {
-    console.warn('Firestore subscription error, fallback to initial data:', err);
+    console.warn('Firestore monthly_records error:', err);
     callback(INITIAL_MONTHLY_RECORDS);
   });
 };
 
-export const subscribeApartmentItems = (
-  callback: (items: BudgetItem[]) => void
+// 2. Financing Contracts (Carro, Caixa)
+export const subscribeFinancingContracts = (
+  callback: (contracts: FinancingContract[]) => void
 ) => {
   if (!db || !isFirebaseConfigured) {
-    const local = localStorage.getItem(LOCAL_STORAGE_ITEMS_KEY);
-    if (local) {
-      try {
-        callback(JSON.parse(local));
-      } catch {
-        callback(INITIAL_APARTMENT_ITEMS);
-      }
-    } else {
-      localStorage.setItem(LOCAL_STORAGE_ITEMS_KEY, JSON.stringify(INITIAL_APARTMENT_ITEMS));
-      callback(INITIAL_APARTMENT_ITEMS);
-    }
+    callback(INITIAL_FINANCING_CONTRACTS);
     return () => {};
   }
 
-  const q = query(collection(db, 'apartment_items'));
-  return onSnapshot(q, (snapshot) => {
+  const q = query(collection(db, 'financing_contracts'));
+  return onSnapshot(q, async (snapshot) => {
     if (snapshot.empty) {
-      callback(INITIAL_APARTMENT_ITEMS);
+      callback(INITIAL_FINANCING_CONTRACTS);
+      if (auth?.currentUser) {
+        try {
+          for (const contract of INITIAL_FINANCING_CONTRACTS) {
+            await setDoc(doc(db, 'financing_contracts', contract.id), contract, { merge: true });
+          }
+        } catch (e) {
+          console.warn('Auto-seed financing_contracts error:', e);
+        }
+      }
     } else {
-      const items: BudgetItem[] = [];
+      const list: FinancingContract[] = [];
       snapshot.forEach((docSnap) => {
-        items.push(docSnap.data() as BudgetItem);
+        list.push(docSnap.data() as FinancingContract);
+      });
+      callback(list);
+    }
+  }, (err) => {
+    console.warn('Firestore financing_contracts error:', err);
+    callback(INITIAL_FINANCING_CONTRACTS);
+  });
+};
+
+// 3. MRV Installments Schedule
+export const subscribeMRVInstallments = (
+  callback: (installments: MRVInstallment[]) => void
+) => {
+  if (!db || !isFirebaseConfigured) {
+    callback(INITIAL_MRV_INSTALLMENTS);
+    return () => {};
+  }
+
+  const q = query(collection(db, 'mrv_installments'));
+  return onSnapshot(q, async (snapshot) => {
+    if (snapshot.empty) {
+      callback(INITIAL_MRV_INSTALLMENTS);
+      if (auth?.currentUser) {
+        try {
+          for (const installment of INITIAL_MRV_INSTALLMENTS) {
+            await setDoc(doc(db, 'mrv_installments', installment.code), installment, { merge: true });
+          }
+        } catch (e) {
+          console.warn('Auto-seed mrv_installments error:', e);
+        }
+      }
+    } else {
+      const list: MRVInstallment[] = [];
+      snapshot.forEach((docSnap) => {
+        list.push(docSnap.data() as MRVInstallment);
+      });
+      callback(list);
+    }
+  }, (err) => {
+    console.warn('Firestore mrv_installments error:', err);
+    callback(INITIAL_MRV_INSTALLMENTS);
+  });
+};
+
+// 4. Credit Card Purchases & Relief Schedule
+export const subscribeCardPurchases = (
+  callback: (items: CreditCardPurchase[]) => void
+) => {
+  if (!db || !isFirebaseConfigured) {
+    callback(INITIAL_CARD_PURCHASES);
+    return () => {};
+  }
+
+  const q = query(collection(db, 'card_purchases'));
+  return onSnapshot(q, async (snapshot) => {
+    if (snapshot.empty) {
+      callback(INITIAL_CARD_PURCHASES);
+      if (auth?.currentUser) {
+        try {
+          for (const item of INITIAL_CARD_PURCHASES) {
+            await setDoc(doc(db, 'card_purchases', item.id), item, { merge: true });
+          }
+        } catch (e) {
+          console.warn('Auto-seed card_purchases error:', e);
+        }
+      }
+    } else {
+      const items: CreditCardPurchase[] = [];
+      snapshot.forEach((docSnap) => {
+        items.push(docSnap.data() as CreditCardPurchase);
       });
       callback(items);
     }
   }, (err) => {
-    console.warn('Firestore apartment items error:', err);
-    callback(INITIAL_APARTMENT_ITEMS);
+    console.warn('Firestore card_purchases error:', err);
+    callback(INITIAL_CARD_PURCHASES);
   });
 };
 
-// Update helpers (can be called locally or by scripts)
+// 5. B3 Assets (FIIs & Ações)
+export const subscribeB3Assets = (
+  callback: (items: B3Asset[]) => void
+) => {
+  if (!db || !isFirebaseConfigured) {
+    callback(INITIAL_B3_ASSETS);
+    return () => {};
+  }
+
+  const q = query(collection(db, 'b3_assets'));
+  return onSnapshot(q, async (snapshot) => {
+    if (snapshot.empty) {
+      callback(INITIAL_B3_ASSETS);
+      if (auth?.currentUser) {
+        try {
+          for (const asset of INITIAL_B3_ASSETS) {
+            await setDoc(doc(db, 'b3_assets', asset.ticker), asset, { merge: true });
+          }
+        } catch (e) {
+          console.warn('Auto-seed b3_assets error:', e);
+        }
+      }
+    } else {
+      const items: B3Asset[] = [];
+      snapshot.forEach((docSnap) => {
+        items.push(docSnap.data() as B3Asset);
+      });
+      callback(items);
+    }
+  }, (err) => {
+    console.warn('Firestore b3_assets error:', err);
+    callback(INITIAL_B3_ASSETS);
+  });
+};
+
+// Update helpers (directly to Cloud Firestore)
 export const updateMonthlyRecord = async (record: MonthlyRecord) => {
   if (db && isFirebaseConfigured) {
     const docRef = doc(db, 'monthly_records', record.id);
     await setDoc(docRef, record, { merge: true });
-  } else {
-    // Local storage fallback
-    const local = localStorage.getItem(LOCAL_STORAGE_RECORDS_KEY);
-    let list: MonthlyRecord[] = local ? JSON.parse(local) : [...INITIAL_MONTHLY_RECORDS];
-    const idx = list.findIndex(r => r.id === record.id);
-    if (idx >= 0) {
-      list[idx] = { ...list[idx], ...record };
-    } else {
-      list.push(record);
-    }
-    localStorage.setItem(LOCAL_STORAGE_RECORDS_KEY, JSON.stringify(list));
+  }
+};
+
+export const updateCardPurchase = async (purchase: CreditCardPurchase) => {
+  if (db && isFirebaseConfigured) {
+    const docRef = doc(db, 'card_purchases', purchase.id);
+    await setDoc(docRef, purchase, { merge: true });
+  }
+};
+
+export const updateB3Asset = async (asset: B3Asset) => {
+  if (db && isFirebaseConfigured) {
+    const docRef = doc(db, 'b3_assets', asset.ticker);
+    await setDoc(docRef, asset, { merge: true });
   }
 };

@@ -2,9 +2,10 @@ import React from 'react';
 import { 
   LayoutDashboard, 
   TableProperties, 
-  Building2, 
   Landmark,
-  MessageSquareCode, 
+  Coins,
+  CreditCard,
+  CalendarCheck,
   LogIn, 
   LogOut, 
   ShieldCheck, 
@@ -13,11 +14,12 @@ import {
 import type { User } from 'firebase/auth';
 
 interface NavbarProps {
-  activeTab: 'overview' | 'table' | 'financing' | 'apartment' | 'chat';
-  setActiveTab: (tab: 'overview' | 'table' | 'financing' | 'apartment' | 'chat') => void;
+  activeTab: 'overview' | 'table' | 'financing' | 'investments' | 'card';
+  setActiveTab: (tab: 'overview' | 'table' | 'financing' | 'investments' | 'card') => void;
   user: User | null;
   onLogin: () => void;
   onLogout: () => void;
+  onOpenClosing: () => void;
   isFirebaseReady: boolean;
 }
 
@@ -27,6 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   user,
   onLogin,
   onLogout,
+  onOpenClosing,
   isFirebaseReady,
 }) => {
   return (
@@ -45,75 +48,86 @@ export const Navbar: React.FC<NavbarProps> = ({
                   Ao Vivo
                 </span>
               </span>
-              <p className="text-xs text-slate-400 hidden lg:block">Controle Financeiro & Patrimônio</p>
+              <p className="text-xs text-slate-400 hidden xl:block">Controle Financeiro & Patrimônio</p>
             </div>
           </div>
 
           {/* Desktop Navigation Tabs */}
-          <nav className="hidden md:flex items-center space-x-1 bg-slate-900/80 p-1.5 rounded-xl border border-slate-800">
+          <nav className="hidden lg:flex items-center space-x-1 bg-slate-900/80 p-1 rounded-2xl border border-slate-800">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                 activeTab === 'overview'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-semibold'
+                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-bold'
                   : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              <LayoutDashboard className="w-4 h-4" />
+              <LayoutDashboard className="w-3.5 h-3.5" />
               <span>Visão Geral</span>
             </button>
 
             <button
               onClick={() => setActiveTab('table')}
-              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                 activeTab === 'table'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-semibold'
+                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-bold'
                   : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              <TableProperties className="w-4 h-4" />
-              <span>Histórico Mensal</span>
+              <TableProperties className="w-3.5 h-3.5" />
+              <span>Histórico</span>
             </button>
 
             <button
               onClick={() => setActiveTab('financing')}
-              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                 activeTab === 'financing'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-semibold'
+                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-bold'
                   : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              <Landmark className="w-4 h-4" />
+              <Landmark className="w-3.5 h-3.5" />
               <span>Financiamentos</span>
             </button>
 
             <button
-              onClick={() => setActiveTab('apartment')}
-              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'apartment'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-semibold'
+              onClick={() => setActiveTab('investments')}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                activeTab === 'investments'
+                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-bold'
                   : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              <Building2 className="w-4 h-4" />
-              <span>Novo Apartamento 2027</span>
+              <Coins className="w-3.5 h-3.5" />
+              <span>Carteira B3</span>
             </button>
 
             <button
-              onClick={() => setActiveTab('chat')}
-              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'chat'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-semibold'
+              onClick={() => setActiveTab('card')}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                activeTab === 'card'
+                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-bold'
                   : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              <MessageSquareCode className="w-4 h-4" />
-              <span>Atualizar via Chat</span>
+              <CreditCard className="w-3.5 h-3.5" />
+              <span>Cartão Itaú</span>
             </button>
           </nav>
 
-          {/* User Auth Section */}
+          {/* User Auth Section & Closing Button */}
           <div className="flex items-center space-x-3 shrink-0">
+            {/* Fechamento Dia 25 Button */}
+            {user && (
+              <button
+                onClick={onOpenClosing}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 text-xs font-bold transition shadow-md shadow-emerald-500/20 cursor-pointer"
+              >
+                <CalendarCheck className="w-4 h-4" />
+                <span className="hidden sm:inline">Fechamento Dia 25</span>
+              </button>
+            )}
+
             {user ? (
               <div className="flex items-center space-x-3">
                 <div className="hidden sm:flex flex-col items-end">
@@ -136,7 +150,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   onClick={onLogout}
                   title="Sair da conta"
-                  className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-900 rounded-lg transition"
+                  className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-900 rounded-lg transition cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
@@ -144,7 +158,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             ) : (
               <button
                 onClick={onLogin}
-                className="flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-sm font-medium bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 hover:border-slate-600 transition"
+                className="flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-sm font-medium bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 hover:border-slate-600 transition cursor-pointer"
               >
                 <LogIn className="w-4 h-4 text-emerald-400" />
                 <span>{isFirebaseReady ? 'Entrar com Google' : 'Modo Local'}</span>
@@ -154,7 +168,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Mobile Navigation Tabs */}
-        <div className="flex md:hidden overflow-x-auto py-2 space-x-2 border-t border-slate-900 text-xs scrollbar-none">
+        <div className="flex lg:hidden overflow-x-auto py-2 space-x-2 border-t border-slate-900 text-xs scrollbar-none">
           <button
             onClick={() => setActiveTab('overview')}
             className={`px-3 py-1.5 rounded-lg whitespace-nowrap font-medium ${
@@ -169,7 +183,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               activeTab === 'table' ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-slate-400 bg-slate-900'
             }`}
           >
-            Histórico Mensal
+            Histórico
           </button>
           <button
             onClick={() => setActiveTab('financing')}
@@ -180,20 +194,20 @@ export const Navbar: React.FC<NavbarProps> = ({
             Financiamentos
           </button>
           <button
-            onClick={() => setActiveTab('apartment')}
+            onClick={() => setActiveTab('investments')}
             className={`px-3 py-1.5 rounded-lg whitespace-nowrap font-medium ${
-              activeTab === 'apartment' ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-slate-400 bg-slate-900'
+              activeTab === 'investments' ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-slate-400 bg-slate-900'
             }`}
           >
-            Apartamento 2027
+            Carteira B3
           </button>
           <button
-            onClick={() => setActiveTab('chat')}
+            onClick={() => setActiveTab('card')}
             className={`px-3 py-1.5 rounded-lg whitespace-nowrap font-medium ${
-              activeTab === 'chat' ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-slate-400 bg-slate-900'
+              activeTab === 'card' ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-slate-400 bg-slate-900'
             }`}
           >
-            Atualizar via Chat
+            Cartão Itaú
           </button>
         </div>
       </div>

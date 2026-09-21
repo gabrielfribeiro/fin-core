@@ -1,4 +1,4 @@
-import type { MonthlyRecord, BudgetItem, FinancingContract, MRVInstallment } from '../types/finance';
+import type { MonthlyRecord, FinancingContract, MRVInstallment, B3Asset, CreditCardPurchase } from '../types/finance';
 
 export const INITIAL_MONTHLY_RECORDS: MonthlyRecord[] = [
   {
@@ -511,19 +511,19 @@ export const INITIAL_MONTHLY_RECORDS: MonthlyRecord[] = [
     "totalIncome": 10373.92,
     "car": 2561.44,
     "apartment": 3124.58,
-    "itau": 4080.97,
+    "itau": 4177.82,
     "nubank": 0,
     "fuel": 0,
     "looseBills": 177.89,
-    "totalExpenses": 9944.88,
-    "monthlyBalance": 429.0400000000009,
+    "totalExpenses": 10041.73,
+    "monthlyBalance": 332.19,
     "savingsItau": 3124.69,
     "avenue": 0,
     "liquidAccount": 411.54,
     "dollarAmount": 0,
     "exchangeRate": 0,
     "netWorth": 3536.23,
-    "notes": "Regra Salario dia 25",
+    "notes": "Fatura Itaú Black fechada em R$ 4.177,82 (Venc. 28/09/2026)",
     "status": "current"
   },
   {
@@ -1278,44 +1278,6 @@ export const INITIAL_MONTHLY_RECORDS: MonthlyRecord[] = [
   }
 ];
 
-export const INITIAL_APARTMENT_ITEMS: BudgetItem[] = [
-  {
-    "id": "1",
-    "name": "Geladeira",
-    "category": "eletro",
-    "estimatedCost": 4800,
-    "status": "planejado"
-  },
-  {
-    "id": "2",
-    "name": "Máquina de Lavar",
-    "category": "eletro",
-    "estimatedCost": 4600,
-    "status": "planejado"
-  },
-  {
-    "id": "3",
-    "name": "Lava-Louças",
-    "category": "eletro",
-    "estimatedCost": 3000,
-    "status": "planejado"
-  },
-  {
-    "id": "4",
-    "name": "Depurador",
-    "category": "eletro",
-    "estimatedCost": 1000,
-    "status": "planejado"
-  },
-  {
-    "id": "5",
-    "name": "Micro-ondas",
-    "category": "eletro",
-    "estimatedCost": 800,
-    "status": "planejado"
-  }
-];
-
 export const INITIAL_FINANCING_CONTRACTS: FinancingContract[] = [
   {
     id: 'carro',
@@ -1424,4 +1386,228 @@ export const INITIAL_MRV_INSTALLMENTS: MRVInstallment[] = [
     notes: 'Descrito pela MRV como desconto sobre adimplência; confirmar se será integralmente abatido'
   }
 ];
+
+export const INITIAL_B3_ASSETS: B3Asset[] = [
+  {
+    ticker: 'MXRF11',
+    name: 'Maxi Renda FII',
+    type: 'fii',
+    segment: 'Papel / Recebíveis',
+    quantity: 0,
+    averagePrice: 10.15,
+    currentPrice: 10.20,
+    monthlyDividendPerShare: 0.10,
+    dividendYieldYearly: 11.8
+  },
+  {
+    ticker: 'XPML11',
+    name: 'XP Malls FII',
+    type: 'fii',
+    segment: 'Shoppings',
+    quantity: 0,
+    averagePrice: 106.50,
+    currentPrice: 107.20,
+    monthlyDividendPerShare: 0.92,
+    dividendYieldYearly: 9.3
+  },
+  {
+    ticker: 'HGLG11',
+    name: 'CSHG Logística FII',
+    type: 'fii',
+    segment: 'Galpões Logísticos',
+    quantity: 0,
+    averagePrice: 161.00,
+    currentPrice: 162.50,
+    monthlyDividendPerShare: 1.10,
+    dividendYieldYearly: 8.8
+  },
+  {
+    ticker: 'BBAS3',
+    name: 'Banco do Brasil S.A.',
+    type: 'acao',
+    segment: 'Setor Bancário',
+    quantity: 0,
+    averagePrice: 27.50,
+    currentPrice: 28.10,
+    monthlyDividendPerShare: 0.22,
+    dividendYieldYearly: 10.2
+  },
+  {
+    ticker: 'ITSA4',
+    name: 'Itaúsa Holding',
+    type: 'acao',
+    segment: 'Holding Financeira',
+    quantity: 0,
+    averagePrice: 10.40,
+    currentPrice: 10.60,
+    monthlyDividendPerShare: 0.08,
+    dividendYieldYearly: 8.9
+  }
+];
+
+export const INITIAL_CARD_PURCHASES: CreditCardPurchase[] = [
+  // 15 Compras Parceladas Reais da Fatura Fechada (21/09/2026)
+  {
+    id: 'p1',
+    description: 'Fisia Nike Eco',
+    category: 'parcelado',
+    installmentCurrent: 5,
+    installmentTotal: 6,
+    installmentValue: 150.58,
+    endMonth: 'Out/2026'
+  },
+  {
+    id: 'p2',
+    description: 'KaBuM! Eletrônicos (Compra 1)',
+    category: 'parcelado',
+    installmentCurrent: 5,
+    installmentTotal: 10,
+    installmentValue: 178.83,
+    endMonth: 'Fev/2027'
+  },
+  {
+    id: 'p3',
+    description: 'KaBuM! Eletrônicos (Compra 2)',
+    category: 'parcelado',
+    installmentCurrent: 5,
+    installmentTotal: 6,
+    installmentValue: 181.67,
+    endMonth: 'Out/2026'
+  },
+  {
+    id: 'p4',
+    description: 'Toss Tennis Club (Educação/Esporte)',
+    category: 'parcelado',
+    installmentCurrent: 4,
+    installmentTotal: 12,
+    installmentValue: 234.38,
+    endMonth: 'Mai/2027'
+  },
+  {
+    id: 'p5',
+    description: 'Mercado Pago - Prospin Vestuário',
+    category: 'parcelado',
+    installmentCurrent: 4,
+    installmentTotal: 10,
+    installmentValue: 186.35,
+    endMonth: 'Mar/2027'
+  },
+  {
+    id: 'p6',
+    description: 'Magazine Luiza (Magalu Uai)',
+    category: 'parcelado',
+    installmentCurrent: 3,
+    installmentTotal: 5,
+    installmentValue: 73.98,
+    endMonth: 'Nov/2026'
+  },
+  {
+    id: 'p7',
+    description: 'Garage 67 Vestuário',
+    category: 'parcelado',
+    installmentCurrent: 3,
+    installmentTotal: 6,
+    installmentValue: 74.96,
+    endMonth: 'Dez/2026'
+  },
+  {
+    id: 'p8',
+    description: 'PlayStation Network (Sony)',
+    category: 'parcelado',
+    installmentCurrent: 3,
+    installmentTotal: 4,
+    installmentValue: 137.47,
+    endMonth: 'Out/2026'
+  },
+  {
+    id: 'p9',
+    description: 'Ihan Oliveira Saúde / Consulta',
+    category: 'parcelado',
+    installmentCurrent: 2,
+    installmentTotal: 3,
+    installmentValue: 466.66,
+    endMonth: 'Out/2026'
+  },
+  {
+    id: 'p10',
+    description: 'TikTok EBN',
+    category: 'parcelado',
+    installmentCurrent: 2,
+    installmentTotal: 2,
+    installmentValue: 91.80,
+    endMonth: 'Finalizou em Set/2026'
+  },
+  {
+    id: 'p11',
+    description: 'Azul Seguros Automotivo',
+    category: 'parcelado',
+    installmentCurrent: 2,
+    installmentTotal: 10,
+    installmentValue: 370.03,
+    endMonth: 'Mai/2027'
+  },
+  {
+    id: 'p12',
+    description: 'Mercado Livre (Item 1)',
+    category: 'parcelado',
+    installmentCurrent: 2,
+    installmentTotal: 12,
+    installmentValue: 34.42,
+    endMonth: 'Jul/2027'
+  },
+  {
+    id: 'p13',
+    description: 'Mercado Livre (Item 2)',
+    category: 'parcelado',
+    installmentCurrent: 2,
+    installmentTotal: 12,
+    installmentValue: 65.43,
+    endMonth: 'Jul/2027'
+  },
+  {
+    id: 'p14',
+    description: 'Decathlon Maringá',
+    category: 'parcelado',
+    installmentCurrent: 1,
+    installmentTotal: 2,
+    installmentValue: 94.98,
+    endMonth: 'Out/2026'
+  },
+  {
+    id: 'p15',
+    description: 'Amazon Brasil (Vestuário/Compras)',
+    category: 'parcelado',
+    installmentCurrent: 1,
+    installmentTotal: 10,
+    installmentValue: 119.98,
+    endMonth: 'Jun/2027'
+  },
+
+  // Gastos à vista e recorrentes categorizados do mês (Setembro/2026)
+  {
+    id: 'v1',
+    description: 'Supermercados & Farmácia (102 Comercial, Bom Dia, Nissei, RCS)',
+    category: 'mercado',
+    installmentValue: 338.23
+  },
+  {
+    id: 'v2',
+    description: 'Assinaturas Digitais (Google One, Wellhub, Netflix, Spotify, YouTube, Crunchyroll, iFood Club, Itaú Avisa)',
+    category: 'recorrente',
+    installmentValue: 322.64
+  },
+  {
+    id: 'v3',
+    description: 'Combustível ShellBox, Lavagem Scamaro e Serviços',
+    category: 'lazer',
+    installmentValue: 454.52
+  },
+  {
+    id: 'v4',
+    description: 'Restaurantes, Delivery (iFood, Rei da Esfiha, Teresinha Possa) & Lazer',
+    category: 'lazer',
+    installmentValue: 600.91
+  }
+];
+
 
