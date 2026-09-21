@@ -123,14 +123,23 @@ export const subscribeMonthlyRecords = (
   callback: (records: MonthlyRecord[]) => void
 ) => {
   if (!db || !isFirebaseConfigured) {
-    callback([]);
+    callback(INITIAL_MONTHLY_RECORDS);
     return () => {};
   }
 
   const q = query(collection(db, 'monthly_records'), orderBy('id', 'asc'));
-  return onSnapshot(q, (snapshot) => {
+  return onSnapshot(q, async (snapshot) => {
     if (snapshot.empty) {
-      callback([]);
+      callback(INITIAL_MONTHLY_RECORDS);
+      if (auth?.currentUser) {
+        try {
+          for (const record of INITIAL_MONTHLY_RECORDS) {
+            await setDoc(doc(db, 'monthly_records', record.id), record, { merge: true });
+          }
+        } catch (e) {
+          console.warn('Auto-seed monthly_records error:', e);
+        }
+      }
     } else {
       const records: MonthlyRecord[] = [];
       snapshot.forEach((docSnap) => {
@@ -140,7 +149,7 @@ export const subscribeMonthlyRecords = (
     }
   }, (err) => {
     console.warn('Firestore monthly_records error:', err);
-    callback([]);
+    callback(INITIAL_MONTHLY_RECORDS);
   });
 };
 
@@ -149,14 +158,23 @@ export const subscribeFinancingContracts = (
   callback: (contracts: FinancingContract[]) => void
 ) => {
   if (!db || !isFirebaseConfigured) {
-    callback([]);
+    callback(INITIAL_FINANCING_CONTRACTS);
     return () => {};
   }
 
   const q = query(collection(db, 'financing_contracts'));
-  return onSnapshot(q, (snapshot) => {
+  return onSnapshot(q, async (snapshot) => {
     if (snapshot.empty) {
-      callback([]);
+      callback(INITIAL_FINANCING_CONTRACTS);
+      if (auth?.currentUser) {
+        try {
+          for (const contract of INITIAL_FINANCING_CONTRACTS) {
+            await setDoc(doc(db, 'financing_contracts', contract.id), contract, { merge: true });
+          }
+        } catch (e) {
+          console.warn('Auto-seed financing_contracts error:', e);
+        }
+      }
     } else {
       const list: FinancingContract[] = [];
       snapshot.forEach((docSnap) => {
@@ -166,7 +184,7 @@ export const subscribeFinancingContracts = (
     }
   }, (err) => {
     console.warn('Firestore financing_contracts error:', err);
-    callback([]);
+    callback(INITIAL_FINANCING_CONTRACTS);
   });
 };
 
@@ -175,14 +193,23 @@ export const subscribeMRVInstallments = (
   callback: (installments: MRVInstallment[]) => void
 ) => {
   if (!db || !isFirebaseConfigured) {
-    callback([]);
+    callback(INITIAL_MRV_INSTALLMENTS);
     return () => {};
   }
 
   const q = query(collection(db, 'mrv_installments'));
-  return onSnapshot(q, (snapshot) => {
+  return onSnapshot(q, async (snapshot) => {
     if (snapshot.empty) {
-      callback([]);
+      callback(INITIAL_MRV_INSTALLMENTS);
+      if (auth?.currentUser) {
+        try {
+          for (const installment of INITIAL_MRV_INSTALLMENTS) {
+            await setDoc(doc(db, 'mrv_installments', installment.code), installment, { merge: true });
+          }
+        } catch (e) {
+          console.warn('Auto-seed mrv_installments error:', e);
+        }
+      }
     } else {
       const list: MRVInstallment[] = [];
       snapshot.forEach((docSnap) => {
@@ -192,7 +219,7 @@ export const subscribeMRVInstallments = (
     }
   }, (err) => {
     console.warn('Firestore mrv_installments error:', err);
-    callback([]);
+    callback(INITIAL_MRV_INSTALLMENTS);
   });
 };
 
@@ -201,14 +228,23 @@ export const subscribeCardPurchases = (
   callback: (items: CreditCardPurchase[]) => void
 ) => {
   if (!db || !isFirebaseConfigured) {
-    callback([]);
+    callback(INITIAL_CARD_PURCHASES);
     return () => {};
   }
 
   const q = query(collection(db, 'card_purchases'));
-  return onSnapshot(q, (snapshot) => {
+  return onSnapshot(q, async (snapshot) => {
     if (snapshot.empty) {
-      callback([]);
+      callback(INITIAL_CARD_PURCHASES);
+      if (auth?.currentUser) {
+        try {
+          for (const item of INITIAL_CARD_PURCHASES) {
+            await setDoc(doc(db, 'card_purchases', item.id), item, { merge: true });
+          }
+        } catch (e) {
+          console.warn('Auto-seed card_purchases error:', e);
+        }
+      }
     } else {
       const items: CreditCardPurchase[] = [];
       snapshot.forEach((docSnap) => {
@@ -218,7 +254,7 @@ export const subscribeCardPurchases = (
     }
   }, (err) => {
     console.warn('Firestore card_purchases error:', err);
-    callback([]);
+    callback(INITIAL_CARD_PURCHASES);
   });
 };
 
@@ -227,14 +263,23 @@ export const subscribeB3Assets = (
   callback: (items: B3Asset[]) => void
 ) => {
   if (!db || !isFirebaseConfigured) {
-    callback([]);
+    callback(INITIAL_B3_ASSETS);
     return () => {};
   }
 
   const q = query(collection(db, 'b3_assets'));
-  return onSnapshot(q, (snapshot) => {
+  return onSnapshot(q, async (snapshot) => {
     if (snapshot.empty) {
-      callback([]);
+      callback(INITIAL_B3_ASSETS);
+      if (auth?.currentUser) {
+        try {
+          for (const asset of INITIAL_B3_ASSETS) {
+            await setDoc(doc(db, 'b3_assets', asset.ticker), asset, { merge: true });
+          }
+        } catch (e) {
+          console.warn('Auto-seed b3_assets error:', e);
+        }
+      }
     } else {
       const items: B3Asset[] = [];
       snapshot.forEach((docSnap) => {
@@ -244,7 +289,7 @@ export const subscribeB3Assets = (
     }
   }, (err) => {
     console.warn('Firestore b3_assets error:', err);
-    callback([]);
+    callback(INITIAL_B3_ASSETS);
   });
 };
 

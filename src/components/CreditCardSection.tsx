@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import type { CreditCardPurchase } from '../types/finance';
 import { formatCurrency, formatPercent } from '../utils/formatters';
+import { INITIAL_CARD_PURCHASES } from '../data/initialData';
 
 interface CreditCardSectionProps {
   purchases: CreditCardPurchase[];
@@ -19,21 +20,23 @@ interface CreditCardSectionProps {
 export const CreditCardSection: React.FC<CreditCardSectionProps> = ({ purchases }) => {
   const [filter, setFilter] = useState<'all' | 'parcelado' | 'spot'>('all');
 
-  const totalInvoice = purchases.reduce((acc, p) => acc + p.installmentValue, 0);
+  const activePurchases = (purchases && purchases.length > 0) ? purchases : INITIAL_CARD_PURCHASES;
 
-  const marketTotal = purchases.filter(p => p.category === 'mercado').reduce((acc, p) => acc + p.installmentValue, 0);
-  const leisureTotal = purchases.filter(p => p.category === 'lazer').reduce((acc, p) => acc + p.installmentValue, 0);
-  const subscriptionsTotal = purchases.filter(p => p.category === 'recorrente').reduce((acc, p) => acc + p.installmentValue, 0);
-  const installmentTotal = purchases.filter(p => p.category === 'parcelado').reduce((acc, p) => acc + p.installmentValue, 0);
+  const totalInvoice = activePurchases.reduce((acc, p) => acc + p.installmentValue, 0);
 
-  const installmentPurchases = purchases.filter(p => p.category === 'parcelado');
-  const spotPurchases = purchases.filter(p => p.category !== 'parcelado');
+  const marketTotal = activePurchases.filter(p => p.category === 'mercado').reduce((acc, p) => acc + p.installmentValue, 0);
+  const leisureTotal = activePurchases.filter(p => p.category === 'lazer').reduce((acc, p) => acc + p.installmentValue, 0);
+  const subscriptionsTotal = activePurchases.filter(p => p.category === 'recorrente').reduce((acc, p) => acc + p.installmentValue, 0);
+  const installmentTotal = activePurchases.filter(p => p.category === 'parcelado').reduce((acc, p) => acc + p.installmentValue, 0);
+
+  const installmentPurchases = activePurchases.filter(p => p.category === 'parcelado');
+  const spotPurchases = activePurchases.filter(p => p.category !== 'parcelado');
 
   const displayedPurchases = filter === 'parcelado' 
     ? installmentPurchases 
     : filter === 'spot' 
     ? spotPurchases 
-    : purchases;
+    : activePurchases;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">

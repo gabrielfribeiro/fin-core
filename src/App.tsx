@@ -31,18 +31,25 @@ import { FinancingSection } from './components/FinancingSection';
 import { InvestmentsSection } from './components/InvestmentsSection';
 import { CreditCardSection } from './components/CreditCardSection';
 import { MonthlyClosingModal } from './components/MonthlyClosingModal';
+import { 
+  INITIAL_MONTHLY_RECORDS, 
+  INITIAL_FINANCING_CONTRACTS, 
+  INITIAL_MRV_INSTALLMENTS, 
+  INITIAL_CARD_PURCHASES, 
+  INITIAL_B3_ASSETS 
+} from './data/initialData';
 import { ShieldAlert, LogOut, Sparkles, Loader2 } from 'lucide-react';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<'overview' | 'table' | 'financing' | 'investments' | 'card'>('overview');
   const [isClosingModalOpen, setIsClosingModalOpen] = useState<boolean>(false);
   
-  // All state is strictly loaded from Cloud Firestore
-  const [records, setRecords] = useState<MonthlyRecord[]>([]);
-  const [contracts, setContracts] = useState<FinancingContract[]>([]);
-  const [mrvSchedule, setMrvSchedule] = useState<MRVInstallment[]>([]);
-  const [cardPurchases, setCardPurchases] = useState<CreditCardPurchase[]>([]);
-  const [b3Assets, setB3Assets] = useState<B3Asset[]>([]);
+  // States initialized with real data, synced continuously with Cloud Firestore
+  const [records, setRecords] = useState<MonthlyRecord[]>(INITIAL_MONTHLY_RECORDS);
+  const [contracts, setContracts] = useState<FinancingContract[]>(INITIAL_FINANCING_CONTRACTS);
+  const [mrvSchedule, setMrvSchedule] = useState<MRVInstallment[]>(INITIAL_MRV_INSTALLMENTS);
+  const [cardPurchases, setCardPurchases] = useState<CreditCardPurchase[]>(INITIAL_CARD_PURCHASES);
+  const [b3Assets, setB3Assets] = useState<B3Asset[]>(INITIAL_B3_ASSETS);
 
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState<boolean>(true);
