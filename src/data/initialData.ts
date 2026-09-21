@@ -1,4 +1,4 @@
-import type { MonthlyRecord, BudgetItem, FinancingContract, MRVInstallment, B3Asset, CreditCardPurchase } from '../types/finance';
+import type { MonthlyRecord, FinancingContract, MRVInstallment, B3Asset, CreditCardPurchase } from '../types/finance';
 
 export const INITIAL_MONTHLY_RECORDS: MonthlyRecord[] = [
   {
@@ -1275,44 +1275,6 @@ export const INITIAL_MONTHLY_RECORDS: MonthlyRecord[] = [
     "netWorth": 0,
     "notes": "",
     "status": "projected"
-  }
-];
-
-export const INITIAL_APARTMENT_ITEMS: BudgetItem[] = [
-  {
-    "id": "1",
-    "name": "Geladeira",
-    "category": "eletro",
-    "estimatedCost": 4800,
-    "status": "planejado"
-  },
-  {
-    "id": "2",
-    "name": "Máquina de Lavar",
-    "category": "eletro",
-    "estimatedCost": 4600,
-    "status": "planejado"
-  },
-  {
-    "id": "3",
-    "name": "Lava-Louças",
-    "category": "eletro",
-    "estimatedCost": 3000,
-    "status": "planejado"
-  },
-  {
-    "id": "4",
-    "name": "Depurador",
-    "category": "eletro",
-    "estimatedCost": 1000,
-    "status": "planejado"
-  },
-  {
-    "id": "5",
-    "name": "Micro-ondas",
-    "category": "eletro",
-    "estimatedCost": 800,
-    "status": "planejado"
   }
 ];
 

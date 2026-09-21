@@ -5,7 +5,8 @@ import {
   logoutUser, 
   subscribeAuth, 
   subscribeMonthlyRecords, 
-  subscribeApartmentItems,
+  subscribeFinancingContracts,
+  subscribeMRVInstallments,
   subscribeCardPurchases,
   subscribeB3Assets,
   isFirebaseConfigured,
@@ -13,7 +14,13 @@ import {
   seedFirestore,
   updateMonthlyRecord
 } from './services/firebase';
-import type { MonthlyRecord, BudgetItem, CreditCardPurchase, B3Asset } from './types/finance';
+import type { 
+  MonthlyRecord, 
+  FinancingContract, 
+  MRVInstallment, 
+  CreditCardPurchase, 
+  B3Asset 
+} from './types/finance';
 import { calculateKPIs } from './utils/formatters';
 import { Navbar } from './components/Navbar';
 import { LoginScreen } from './components/LoginScreen';
@@ -21,26 +28,22 @@ import { OverviewCards } from './components/OverviewCards';
 import { FinancialCharts } from './components/FinancialCharts';
 import { MonthlyTable } from './components/MonthlyTable';
 import { FinancingSection } from './components/FinancingSection';
-import { ApartmentSection } from './components/ApartmentSection';
 import { InvestmentsSection } from './components/InvestmentsSection';
 import { CreditCardSection } from './components/CreditCardSection';
 import { MonthlyClosingModal } from './components/MonthlyClosingModal';
-import { AssistantGuide } from './components/AssistantGuide';
-import { 
-  INITIAL_FINANCING_CONTRACTS, 
-  INITIAL_MRV_INSTALLMENTS,
-  INITIAL_B3_ASSETS,
-  INITIAL_CARD_PURCHASES
-} from './data/initialData';
 import { ShieldAlert, LogOut, Sparkles, Loader2 } from 'lucide-react';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'table' | 'financing' | 'investments' | 'card' | 'apartment' | 'chat'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'table' | 'financing' | 'investments' | 'card'>('overview');
   const [isClosingModalOpen, setIsClosingModalOpen] = useState<boolean>(false);
+  
+  // All state is strictly loaded from Cloud Firestore
   const [records, setRecords] = useState<MonthlyRecord[]>([]);
-  const [apartmentItems, setApartmentItems] = useState<BudgetItem[]>([]);
-  const [cardPurchases, setCardPurchases] = useState<CreditCardPurchase[]>(INITIAL_CARD_PURCHASES);
-  const [b3Assets, setB3Assets] = useState<B3Asset[]>(INITIAL_B3_ASSETS);
+  const [contracts, setContracts] = useState<FinancingContract[]>([]);
+  const [mrvSchedule, setMrvSchedule] = useState<MRVInstallment[]>([]);
+  const [cardPurchases, setCardPurchases] = useState<CreditCardPurchase[]>([]);
+  const [b3Assets, setB3Assets] = useState<B3Asset[]>([]);
+
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState<boolean>(true);
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
@@ -69,35 +72,43 @@ export function App() {
     };
   }, []);
 
-  // Only subscribe to records & data once user is authenticated and authorized
+  // Only subscribe to Cloud Firestore once user is authenticated and authorized
   useEffect(() => {
     if (!user || !isUserAuthorized(user)) {
       setRecords([]);
-      setApartmentItems([]);
+      setContracts([]);
+      setMrvSchedule([]);
+      setCardPurchases([]);
+      setB3Assets([]);
       return;
     }
 
-    const unsubscribeRecords = subscribeMonthlyRecords((data) => {
+    const unsubRecords = subscribeMonthlyRecords((data) => {
       setRecords(data);
     });
 
-    const unsubscribeApartment = subscribeApartmentItems((items) => {
-      setApartmentItems(items);
+    const unsubContracts = subscribeFinancingContracts((data) => {
+      setContracts(data);
     });
 
-    const unsubscribeCard = subscribeCardPurchases((purchases) => {
-      setCardPurchases(purchases);
+    const unsubMRV = subscribeMRVInstallments((data) => {
+      setMrvSchedule(data);
     });
 
-    const unsubscribeB3 = subscribeB3Assets((assets) => {
-      setB3Assets(assets);
+    const unsubCard = subscribeCardPurchases((data) => {
+      setCardPurchases(data);
+    });
+
+    const unsubB3 = subscribeB3Assets((data) => {
+      setB3Assets(data);
     });
 
     return () => {
-      unsubscribeRecords();
-      unsubscribeApartment();
-      unsubscribeCard();
-      unsubscribeB3();
+      unsubRecords();
+      unsubContracts();
+      unsubMRV();
+      unsubCard();
+      unsubB3();
     };
   }, [user]);
 
@@ -135,6 +146,11 @@ export function App() {
     await logoutUser();
     setUser(null);
     setAuthError(null);
+    setRecords([]);
+    setContracts([]);
+    setMrvSchedule([]);
+    setCardPurchases([]);
+    setB3Assets([]);
   };
 
   const handleConfirmClosing = async (
@@ -179,13 +195,13 @@ export function App() {
       exchangeRate: 1,
       netWorth: newSavingsItau + newB3,
       status: 'completed',
-      notes: 'Fechamento guiado do dia 25 aplicado com divisão 50% Reserva / 50% B3.'
+      notes: 'Fechamento guiado do dia 25 aplicado diretamente no Firestore.'
     };
 
     try {
       await updateMonthlyRecord(updatedRecord);
     } catch (e) {
-      console.error('Erro ao atualizar fechamento:', e);
+      console.error('Erro ao atualizar fechamento no Firestore:', e);
     }
   };
 
@@ -276,7 +292,7 @@ export function App() {
             <div>
               <h2 className="text-xl font-bold text-white tracking-tight">Histórico Mensal Completo</h2>
               <p className="text-xs text-slate-400">
-                Todos os registros de 2025 até 2027 com receitas, despesas fixas, cartões e patrimônio
+                Registros sincronizados em tempo real do Cloud Firestore
               </p>
             </div>
             <MonthlyTable records={records} />
@@ -286,8 +302,8 @@ export function App() {
         {activeTab === 'financing' && (
           <div className="animate-in fade-in duration-300">
             <FinancingSection
-              contracts={INITIAL_FINANCING_CONTRACTS}
-              mrvSchedule={INITIAL_MRV_INSTALLMENTS}
+              contracts={contracts}
+              mrvSchedule={mrvSchedule}
             />
           </div>
         )}
@@ -301,18 +317,6 @@ export function App() {
         {activeTab === 'card' && (
           <div className="animate-in fade-in duration-300">
             <CreditCardSection purchases={cardPurchases} />
-          </div>
-        )}
-
-        {activeTab === 'apartment' && (
-          <div className="animate-in fade-in duration-300">
-            <ApartmentSection items={apartmentItems} />
-          </div>
-        )}
-
-        {activeTab === 'chat' && (
-          <div className="animate-in fade-in duration-300">
-            <AssistantGuide isFirebaseReady={isFirebaseConfigured} />
           </div>
         )}
       </main>
@@ -329,10 +333,10 @@ export function App() {
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span className="flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-            FinCore • Seu Ecossistema Financeiro Pessoal
+            FinCore • Conectado ao Firebase Cloud Firestore
           </span>
           <span className="text-slate-600">
-            Conectado com {user.email} • Atualizações automáticas via Chat
+            Usuário: {user.email} • Banco de Dados na Nuvem 100% Ativo
           </span>
         </div>
       </footer>

@@ -25,16 +25,6 @@ export interface MonthlyRecord {
   status: 'completed' | 'current' | 'projected';
 }
 
-export interface BudgetItem {
-  id: string;
-  name: string;
-  category: 'eletro' | 'movel' | 'reforma' | 'documentacao';
-  estimatedCost: number;
-  actualCost?: number;
-  status: 'planejado' | 'comprado' | 'prioridade';
-  notes?: string;
-}
-
 export interface FinancingContract {
   id: string;
   name: string;

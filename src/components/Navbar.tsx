@@ -2,12 +2,10 @@ import React from 'react';
 import { 
   LayoutDashboard, 
   TableProperties, 
-  Building2, 
   Landmark,
   Coins,
   CreditCard,
   CalendarCheck,
-  MessageSquareCode, 
   LogIn, 
   LogOut, 
   ShieldCheck, 
@@ -16,8 +14,8 @@ import {
 import type { User } from 'firebase/auth';
 
 interface NavbarProps {
-  activeTab: 'overview' | 'table' | 'financing' | 'investments' | 'card' | 'apartment' | 'chat';
-  setActiveTab: (tab: 'overview' | 'table' | 'financing' | 'investments' | 'card' | 'apartment' | 'chat') => void;
+  activeTab: 'overview' | 'table' | 'financing' | 'investments' | 'card';
+  setActiveTab: (tab: 'overview' | 'table' | 'financing' | 'investments' | 'card') => void;
   user: User | null;
   onLogin: () => void;
   onLogout: () => void;
@@ -115,30 +113,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               <CreditCard className="w-3.5 h-3.5" />
               <span>Cartão Itaú</span>
             </button>
-
-            <button
-              onClick={() => setActiveTab('apartment')}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                activeTab === 'apartment'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-bold'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <Building2 className="w-3.5 h-3.5" />
-              <span>Novo AP 2027</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('chat')}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                activeTab === 'chat'
-                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20 font-bold'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <MessageSquareCode className="w-3.5 h-3.5" />
-              <span>Chat</span>
-            </button>
           </nav>
 
           {/* User Auth Section & Closing Button */}
@@ -234,22 +208,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             Cartão Itaú
-          </button>
-          <button
-            onClick={() => setActiveTab('apartment')}
-            className={`px-3 py-1.5 rounded-lg whitespace-nowrap font-medium ${
-              activeTab === 'apartment' ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-slate-400 bg-slate-900'
-            }`}
-          >
-            Novo AP 2027
-          </button>
-          <button
-            onClick={() => setActiveTab('chat')}
-            className={`px-3 py-1.5 rounded-lg whitespace-nowrap font-medium ${
-              activeTab === 'chat' ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-slate-400 bg-slate-900'
-            }`}
-          >
-            Chat
           </button>
         </div>
       </div>
