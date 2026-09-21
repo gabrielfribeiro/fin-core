@@ -6,12 +6,14 @@ import {
   subscribeAuth, 
   subscribeMonthlyRecords, 
   subscribeApartmentItems,
+  subscribeCardPurchases,
+  subscribeB3Assets,
   isFirebaseConfigured,
   isUserAuthorized,
   seedFirestore,
   updateMonthlyRecord
 } from './services/firebase';
-import type { MonthlyRecord, BudgetItem } from './types/finance';
+import type { MonthlyRecord, BudgetItem, CreditCardPurchase, B3Asset } from './types/finance';
 import { calculateKPIs } from './utils/formatters';
 import { Navbar } from './components/Navbar';
 import { LoginScreen } from './components/LoginScreen';
@@ -37,6 +39,8 @@ export function App() {
   const [isClosingModalOpen, setIsClosingModalOpen] = useState<boolean>(false);
   const [records, setRecords] = useState<MonthlyRecord[]>([]);
   const [apartmentItems, setApartmentItems] = useState<BudgetItem[]>([]);
+  const [cardPurchases, setCardPurchases] = useState<CreditCardPurchase[]>(INITIAL_CARD_PURCHASES);
+  const [b3Assets, setB3Assets] = useState<B3Asset[]>(INITIAL_B3_ASSETS);
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState<boolean>(true);
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
@@ -81,9 +85,19 @@ export function App() {
       setApartmentItems(items);
     });
 
+    const unsubscribeCard = subscribeCardPurchases((purchases) => {
+      setCardPurchases(purchases);
+    });
+
+    const unsubscribeB3 = subscribeB3Assets((assets) => {
+      setB3Assets(assets);
+    });
+
     return () => {
       unsubscribeRecords();
       unsubscribeApartment();
+      unsubscribeCard();
+      unsubscribeB3();
     };
   }, [user]);
 
@@ -280,13 +294,13 @@ export function App() {
 
         {activeTab === 'investments' && (
           <div className="animate-in fade-in duration-300">
-            <InvestmentsSection assets={INITIAL_B3_ASSETS} />
+            <InvestmentsSection assets={b3Assets} />
           </div>
         )}
 
         {activeTab === 'card' && (
           <div className="animate-in fade-in duration-300">
-            <CreditCardSection purchases={INITIAL_CARD_PURCHASES} />
+            <CreditCardSection purchases={cardPurchases} />
           </div>
         )}
 

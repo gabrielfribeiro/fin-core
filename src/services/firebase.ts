@@ -16,8 +16,13 @@ import {
   query,
   orderBy
 } from 'firebase/firestore';
-import type { MonthlyRecord, BudgetItem } from '../types/finance';
-import { INITIAL_MONTHLY_RECORDS, INITIAL_APARTMENT_ITEMS } from '../data/initialData';
+import type { MonthlyRecord, BudgetItem, CreditCardPurchase, B3Asset } from '../types/finance';
+import { 
+  INITIAL_MONTHLY_RECORDS, 
+  INITIAL_APARTMENT_ITEMS,
+  INITIAL_CARD_PURCHASES,
+  INITIAL_B3_ASSETS
+} from '../data/initialData';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
@@ -82,10 +87,12 @@ export const subscribeAuth = (callback: (user: User | null) => void) => {
 // Firestore listeners with fallback to local storage
 const LOCAL_STORAGE_RECORDS_KEY = 'finance_records_local';
 const LOCAL_STORAGE_ITEMS_KEY = 'finance_apartment_items_local';
+const LOCAL_STORAGE_PURCHASES_KEY = 'finance_card_purchases_local';
+const LOCAL_STORAGE_ASSETS_KEY = 'finance_b3_assets_local';
 
 export const seedFirestore = async () => {
   if (!db || !isFirebaseConfigured) return;
-  console.log('Semeando Firestore com dados históricos...');
+  console.log('Semeando Firestore com dados históricos e carteiras...');
   for (const record of INITIAL_MONTHLY_RECORDS) {
     const docRef = doc(db, 'monthly_records', record.id);
     await setDoc(docRef, record, { merge: true });
@@ -94,7 +101,15 @@ export const seedFirestore = async () => {
     const docRef = doc(db, 'apartment_items', item.id);
     await setDoc(docRef, item, { merge: true });
   }
-  console.log('Firestore semeado com sucesso!');
+  for (const purchase of INITIAL_CARD_PURCHASES) {
+    const docRef = doc(db, 'card_purchases', purchase.id);
+    await setDoc(docRef, purchase, { merge: true });
+  }
+  for (const asset of INITIAL_B3_ASSETS) {
+    const docRef = doc(db, 'b3_assets', asset.ticker);
+    await setDoc(docRef, asset, { merge: true });
+  }
+  console.log('Firestore sincronizado com sucesso!');
 };
 
 export const subscribeMonthlyRecords = (
@@ -176,6 +191,76 @@ export const subscribeApartmentItems = (
   });
 };
 
+export const subscribeCardPurchases = (
+  callback: (items: CreditCardPurchase[]) => void
+) => {
+  if (!db || !isFirebaseConfigured) {
+    const local = localStorage.getItem(LOCAL_STORAGE_PURCHASES_KEY);
+    if (local) {
+      try {
+        callback(JSON.parse(local));
+      } catch {
+        callback(INITIAL_CARD_PURCHASES);
+      }
+    } else {
+      localStorage.setItem(LOCAL_STORAGE_PURCHASES_KEY, JSON.stringify(INITIAL_CARD_PURCHASES));
+      callback(INITIAL_CARD_PURCHASES);
+    }
+    return () => {};
+  }
+
+  const q = query(collection(db, 'card_purchases'));
+  return onSnapshot(q, (snapshot) => {
+    if (snapshot.empty) {
+      callback(INITIAL_CARD_PURCHASES);
+    } else {
+      const items: CreditCardPurchase[] = [];
+      snapshot.forEach((docSnap) => {
+        items.push(docSnap.data() as CreditCardPurchase);
+      });
+      callback(items);
+    }
+  }, (err) => {
+    console.warn('Firestore card purchases error:', err);
+    callback(INITIAL_CARD_PURCHASES);
+  });
+};
+
+export const subscribeB3Assets = (
+  callback: (items: B3Asset[]) => void
+) => {
+  if (!db || !isFirebaseConfigured) {
+    const local = localStorage.getItem(LOCAL_STORAGE_ASSETS_KEY);
+    if (local) {
+      try {
+        callback(JSON.parse(local));
+      } catch {
+        callback(INITIAL_B3_ASSETS);
+      }
+    } else {
+      localStorage.setItem(LOCAL_STORAGE_ASSETS_KEY, JSON.stringify(INITIAL_B3_ASSETS));
+      callback(INITIAL_B3_ASSETS);
+    }
+    return () => {};
+  }
+
+  const q = query(collection(db, 'b3_assets'));
+  return onSnapshot(q, (snapshot) => {
+    if (snapshot.empty) {
+      callback(INITIAL_B3_ASSETS);
+    } else {
+      const items: B3Asset[] = [];
+      snapshot.forEach((docSnap) => {
+        items.push(docSnap.data() as B3Asset);
+      });
+      callback(items);
+    }
+  }, (err) => {
+    console.warn('Firestore b3 assets error:', err);
+    callback(INITIAL_B3_ASSETS);
+  });
+};
+
 // Update helpers (can be called locally or by scripts)
 export const updateMonthlyRecord = async (record: MonthlyRecord) => {
   if (db && isFirebaseConfigured) {
@@ -192,5 +277,19 @@ export const updateMonthlyRecord = async (record: MonthlyRecord) => {
       list.push(record);
     }
     localStorage.setItem(LOCAL_STORAGE_RECORDS_KEY, JSON.stringify(list));
+  }
+};
+
+export const updateCardPurchase = async (purchase: CreditCardPurchase) => {
+  if (db && isFirebaseConfigured) {
+    const docRef = doc(db, 'card_purchases', purchase.id);
+    await setDoc(docRef, purchase, { merge: true });
+  }
+};
+
+export const updateB3Asset = async (asset: B3Asset) => {
+  if (db && isFirebaseConfigured) {
+    const docRef = doc(db, 'b3_assets', asset.ticker);
+    await setDoc(docRef, asset, { merge: true });
   }
 };
