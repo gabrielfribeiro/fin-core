@@ -21,7 +21,7 @@ import type {
   CreditCardPurchase, 
   B3Asset 
 } from './types/finance';
-import { calculateKPIs } from './utils/formatters';
+import { calculateKPIs, getNextMonthInfo } from './utils/formatters';
 import { Navbar } from './components/Navbar';
 import { LoginScreen } from './components/LoginScreen';
 import { OverviewCards } from './components/OverviewCards';
@@ -43,6 +43,7 @@ import { ShieldAlert, LogOut, Sparkles, Loader2 } from 'lucide-react';
 export function App() {
   const [activeTab, setActiveTab] = useState<'overview' | 'table' | 'financing' | 'investments' | 'card'>('overview');
   const [isClosingModalOpen, setIsClosingModalOpen] = useState<boolean>(false);
+  const [selectedMonthId, setSelectedMonthId] = useState<string>('2026-09');
   
   // States initialized with real data, synced continuously with Cloud Firestore
   const [records, setRecords] = useState<MonthlyRecord[]>(INITIAL_MONTHLY_RECORDS);
@@ -169,7 +170,8 @@ export function App() {
     reserveAmount: number,
     b3Amount: number
   ) => {
-    const targetId = '2026-10';
+    const targetInfo = getNextMonthInfo(selectedMonthId);
+    const targetId = targetInfo.nextMonthId;
     const lastRecord = records[records.length - 1];
     const existingTarget = records.find(r => r.id === targetId);
     
@@ -182,11 +184,14 @@ export function App() {
     const totalExpenses = car + apartment + itauCard;
     const monthlyBalance = totalIncome - totalExpenses - reserveAmount - b3Amount;
 
+    const refMonthRecord = records.find(r => r.id === selectedMonthId);
+    const refLabel = refMonthRecord ? `${refMonthRecord.month}/${refMonthRecord.year}` : selectedMonthId;
+
     const updatedRecord: MonthlyRecord = {
       id: targetId,
-      year: 2026,
-      month: 'Outubro',
-      monthIndex: 10,
+      year: targetInfo.year,
+      month: targetInfo.monthName,
+      monthIndex: targetInfo.monthIndex,
       salary,
       extraIncome,
       totalIncome,
@@ -205,11 +210,12 @@ export function App() {
       exchangeRate: 1,
       netWorth: newSavingsItau + newB3,
       status: 'completed',
-      notes: 'Fechamento guiado do dia 25 aplicado diretamente no Firestore.'
+      notes: `Fechamento do dia 25 (${refLabel} ➔ ${targetInfo.nextMonthLabel}) aplicado diretamente no Firestore.`
     };
 
     try {
       await updateMonthlyRecord(updatedRecord);
+      setSelectedMonthId(targetId);
     } catch (e) {
       console.error('Erro ao atualizar fechamento no Firestore:', e);
     }
@@ -263,7 +269,14 @@ export function App() {
 
   // KPIs calculation for authenticated view
   const kpis = calculateKPIs(records);
-  const currentRecord = records.find(r => r.id === '2026-09') || records[records.length - 1];
+  const availableMonths = records.map(r => ({
+    id: r.id,
+    label: `${r.month}/${r.year}`,
+    year: r.year,
+    month: r.month
+  }));
+  const nextMonthInfo = getNextMonthInfo(selectedMonthId);
+  const currentRecord = records.find(r => r.id === selectedMonthId) || records.find(r => r.id === '2026-09') || records[records.length - 1];
 
   return (
     <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col selection:bg-emerald-500/30 selection:text-emerald-300">
@@ -276,6 +289,9 @@ export function App() {
         onLogout={handleLogout}
         onOpenClosing={() => setIsClosingModalOpen(true)}
         isFirebaseReady={isFirebaseConfigured}
+        selectedMonthId={selectedMonthId}
+        onSelectMonth={setSelectedMonthId}
+        availableMonths={availableMonths}
       />
 
       {/* Auth Banner error if any */}
@@ -335,6 +351,9 @@ export function App() {
       <MonthlyClosingModal
         isOpen={isClosingModalOpen}
         onClose={() => setIsClosingModalOpen(false)}
+        targetMonthId={nextMonthInfo.nextMonthId}
+        targetMonthLabel={nextMonthInfo.nextMonthLabel}
+        currentMonthLabel={currentRecord ? `${currentRecord.month}/${currentRecord.year}` : 'Setembro/2026'}
         onConfirmClosing={handleConfirmClosing}
       />
 

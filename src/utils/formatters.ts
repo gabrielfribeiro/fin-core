@@ -66,3 +66,21 @@ export const calculateKPIs = (records: MonthlyRecord[]): KPIStats => {
     goal2027Percent,
   };
 };
+
+export const getNextMonthInfo = (monthId: string = '2026-09') => {
+  const [yearStr, monthStr] = (monthId || '2026-09').split('-');
+  let year = parseInt(yearStr, 10) || 2026;
+  let month = parseInt(monthStr, 10) || 9;
+  month += 1;
+  if (month > 12) {
+    month = 1;
+    year += 1;
+  }
+  const nextMonthId = `${year}-${String(month).padStart(2, '0')}`;
+  const MONTH_NAMES = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ];
+  const nextMonthLabel = `${MONTH_NAMES[month - 1]}/${year}`;
+  return { nextMonthId, nextMonthLabel, year, monthName: MONTH_NAMES[month - 1], monthIndex: month };
+};

@@ -22,6 +22,9 @@ import { formatCurrency } from '../utils/formatters';
 interface MonthlyClosingModalProps {
   isOpen: boolean;
   onClose: () => void;
+  targetMonthId?: string;
+  targetMonthLabel?: string;
+  currentMonthLabel?: string;
   onConfirmClosing: (
     salary: number,
     extraIncome: number,
@@ -102,6 +105,9 @@ const FIELD_CONFIGS: FieldConfig[] = [
 export const MonthlyClosingModal: React.FC<MonthlyClosingModalProps> = ({
   isOpen,
   onClose,
+  targetMonthId: _targetMonthId = '2026-10',
+  targetMonthLabel = 'Outubro/2026',
+  currentMonthLabel = 'Setembro/2026',
   onConfirmClosing
 }) => {
   // Store items array for each field
@@ -196,7 +202,7 @@ export const MonthlyClosingModal: React.FC<MonthlyClosingModalProps> = ({
     }
   };
 
-  const chatMessage = `Fechamento do dia 25:
+  const chatMessage = `Fechamento do Dia 25 (${currentMonthLabel} ➔ ${targetMonthLabel}):
 - Salário Líquido: ${formatCurrency(salary)}
 - Renda Extra: ${formatCurrency(extraIncome)}
 - Total de Receitas: ${formatCurrency(totalIncome)}
@@ -233,10 +239,10 @@ export const MonthlyClosingModal: React.FC<MonthlyClosingModalProps> = ({
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                Fechamento Guiado do Dia 25
+                Fechamento Dia 25 <ArrowRight className="w-4 h-4 text-emerald-400 inline" /> <span className="text-emerald-400">{targetMonthLabel}</span>
               </h3>
               <p className="text-xs text-slate-400">
-                Pague as contas, some receitas/despesas e destine 100% da sobra para Reserva e B3
+                Salário recebido no dia 25 ({currentMonthLabel}) pagando as contas e destinando a sobra para o padrão de {targetMonthLabel}
               </p>
             </div>
           </div>
@@ -438,7 +444,7 @@ export const MonthlyClosingModal: React.FC<MonthlyClosingModalProps> = ({
             onClick={handleApply}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition shadow-lg shadow-emerald-500/20 cursor-pointer"
           >
-            <span>Confirmar Fechamento</span>
+            <span>Confirmar Fechamento ({targetMonthLabel})</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
