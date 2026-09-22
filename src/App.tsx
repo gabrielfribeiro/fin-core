@@ -162,7 +162,9 @@ export function App() {
 
   const handleConfirmClosing = async (
     salary: number,
-    bills: number,
+    extraIncome: number,
+    car: number,
+    apartment: number,
     itauCard: number,
     reserveAmount: number,
     b3Amount: number
@@ -176,8 +178,9 @@ export function App() {
 
     const newSavingsItau = previousReserve + reserveAmount;
     const newB3 = previousB3 + b3Amount;
-    const totalExpenses = bills + itauCard;
-    const monthlyBalance = salary - totalExpenses - reserveAmount - b3Amount;
+    const totalIncome = salary + extraIncome;
+    const totalExpenses = car + apartment + itauCard;
+    const monthlyBalance = totalIncome - totalExpenses - reserveAmount - b3Amount;
 
     const updatedRecord: MonthlyRecord = {
       id: targetId,
@@ -185,10 +188,10 @@ export function App() {
       month: 'Outubro',
       monthIndex: 10,
       salary,
-      extraIncome: 0,
-      totalIncome: salary,
-      car: 2570.52,
-      apartment: 1063.42,
+      extraIncome,
+      totalIncome,
+      car,
+      apartment,
       itau: itauCard,
       nubank: 0,
       fuel: 0,
