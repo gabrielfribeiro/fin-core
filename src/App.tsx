@@ -12,7 +12,8 @@ import {
   isFirebaseConfigured,
   isUserAuthorized,
   updateMonthlyRecord,
-  resetMonthToProjected
+  syncB3AssetsToFirestore,
+  cleanObsoleteB3Assets
 } from './services/firebase';
 import type { 
   MonthlyRecord, 
@@ -43,7 +44,7 @@ import { ShieldAlert, LogOut, Sparkles, Loader2 } from 'lucide-react';
 export function App() {
   const [activeTab, setActiveTab] = useState<'overview' | 'table' | 'financing' | 'investments' | 'card'>('overview');
   const [isClosingModalOpen, setIsClosingModalOpen] = useState<boolean>(false);
-  const [selectedMonthId, setSelectedMonthId] = useState<string>('2026-09');
+  const [selectedMonthId, setSelectedMonthId] = useState<string>('2026-10');
   
   // States initialized with real data, synced continuously with Cloud Firestore
   const [records, setRecords] = useState<MonthlyRecord[]>(INITIAL_MONTHLY_RECORDS);
@@ -156,10 +157,10 @@ export function App() {
     setB3Assets([]);
   };
 
-  // Ensure September is restored to its exact original values if changed
+  // Ensure September is preserved with original spreadsheet values and marked completed
   useEffect(() => {
     const sep = records.find(r => r.id === '2026-09');
-    if (sep && sep.totalIncome === 19288.92) {
+    if (sep && (sep.totalIncome === 19288.92 || sep.status === 'current')) {
       const originalSeptember: MonthlyRecord = {
         id: "2026-09",
         year: 2026,
@@ -183,19 +184,53 @@ export function App() {
         exchangeRate: 0,
         netWorth: 3536.23,
         notes: "Fatura Itaú Black fechada em R$ 4.177,82 (Venc. 28/09/2026)",
-        status: "current"
+        status: "completed"
       };
       updateMonthlyRecord(originalSeptember);
     }
   }, [records]);
 
-  // One-time cleanup for duplicated October if detected in Firestore
+  // Sync October 2026 with real closing numbers and balances
   useEffect(() => {
-    const oct = records.find(r => r.id === '2026-10');
-    if (oct && (oct.extraIncome > 0 || oct.itau > 0) && oct.notes?.includes('25/09')) {
-      resetMonthToProjected('2026-10', 2026, 'Outubro', 10);
+    if (user && isUserAuthorized(user)) {
+      const oct = records.find(r => r.id === '2026-10');
+      if (oct && (oct.salary === 0 || oct.status !== 'current' || oct.savingsItau !== 7144.72)) {
+        const octoberUpdated: MonthlyRecord = {
+          id: "2026-10",
+          year: 2026,
+          month: "Outubro",
+          monthIndex: 10,
+          salary: 9744.19,
+          extraIncome: 9544.73,
+          totalIncome: 19288.92,
+          car: 2562.95,
+          apartment: 3181.43,
+          itau: 4177.82,
+          nubank: 392.16,
+          fuel: 0,
+          looseBills: 0,
+          totalExpenses: 10314.36,
+          monthlyBalance: 8974.56,
+          savingsItau: 7144.72,
+          avenue: 4596.45,
+          liquidAccount: 602.16,
+          dollarAmount: 0,
+          exchangeRate: 1,
+          netWorth: 12343.33,
+          notes: "Fechamento do ciclo 25/09 (Out/2026). Reserva de Emergência Itaú: R$ 7.144,72 | 9 FIIs Nubank: R$ 4.596,45 | Saldo em Conta: R$ 602,16.",
+          status: "current"
+        };
+        updateMonthlyRecord(octoberUpdated);
+      }
+
+      // Sync B3 Assets if missing or quantity 0
+      const hasRealB3 = b3Assets.some(a => a.ticker === 'MXRF11' && a.quantity === 67);
+      if (!hasRealB3) {
+        syncB3AssetsToFirestore(INITIAL_B3_ASSETS);
+        cleanObsoleteB3Assets(INITIAL_B3_ASSETS.map(a => a.ticker));
+      }
     }
-  }, [records]);
+  }, [user, records, b3Assets]);
 
   const handleConfirmClosing = async (
     monthId: string,
@@ -309,7 +344,7 @@ export function App() {
   }
 
   // KPIs calculation for authenticated view
-  const kpis = calculateKPIs(records);
+  const kpis = calculateKPIs(records, b3Assets);
   const currentRecord = records.find(r => r.id === selectedMonthId) || 
                         records.find(r => r.status === 'current') || 
                         records[records.length - 1];

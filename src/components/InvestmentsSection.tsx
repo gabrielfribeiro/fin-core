@@ -81,53 +81,65 @@ export const InvestmentsSection: React.FC<InvestmentsSectionProps> = ({ assets }
           <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/90 space-y-2">
             <div className="flex justify-between items-center">
               <span className="font-bold text-white text-sm">MXRF11</span>
-              <span className="text-[11px] text-emerald-400 font-semibold">Cota ~R$ 10,20</span>
+              <span className="text-[11px] text-emerald-400 font-semibold font-mono">67 cotas em carteira</span>
             </div>
             <div className="text-xs text-slate-300">
-              Dividendo: <strong className="text-emerald-400">R$ 0,10/mês</strong> por cota
+              Dividendo: <strong className="text-emerald-400">R$ 0,09/mês</strong> por cota • <span className="text-slate-400">R$ 6,03/mês atual</span>
             </div>
             <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs flex justify-between items-center">
               <span className="text-slate-400">Número Mágico:</span>
-              <strong className="text-amber-400 font-mono text-sm">102 cotas (~R$ 1.040)</strong>
+              <strong className="text-amber-400 font-mono text-sm">101 cotas (~R$ 916)</strong>
             </div>
-            <span className="text-[10px] text-slate-500 block">
-              Ao atingir 102 cotas, o MXRF11 compra 1 cota dele mesmo todo mês para sempre!
-            </span>
+            <div className="space-y-1">
+              <div className="flex justify-between text-[11px]">
+                <span className="text-slate-400">Progresso da Bola de Neve:</span>
+                <span className="text-amber-400 font-bold font-mono">66,3% (Faltam 34 cotas)</span>
+              </div>
+              <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                <div className="bg-amber-400 h-full rounded-full transition-all duration-500" style={{ width: '66.3%' }} />
+              </div>
+            </div>
           </div>
 
-          {/* FII 2: XPML11 */}
+          {/* FII 2: GGRC11 */}
           <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/90 space-y-2">
             <div className="flex justify-between items-center">
-              <span className="font-bold text-white text-sm">XPML11</span>
-              <span className="text-[11px] text-emerald-400 font-semibold">Cota ~R$ 107,20</span>
+              <span className="font-bold text-white text-sm">GGRC11</span>
+              <span className="text-[11px] text-emerald-400 font-semibold font-mono">50 cotas em carteira</span>
             </div>
             <div className="text-xs text-slate-300">
-              Dividendo: <strong className="text-emerald-400">R$ 0,92/mês</strong> por cota
+              Dividendo: <strong className="text-emerald-400">R$ 0,09/mês</strong> por cota • <span className="text-slate-400">R$ 4,50/mês atual</span>
             </div>
             <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs flex justify-between items-center">
               <span className="text-slate-400">Número Mágico:</span>
-              <strong className="text-amber-400 font-mono text-sm">117 cotas (~R$ 12,5k)</strong>
+              <strong className="text-amber-400 font-mono text-sm">99 cotas (~R$ 885)</strong>
             </div>
-            <span className="text-[10px] text-slate-500 block">
-              Com 117 cotas de shoppings, você recebe mais de R$ 107 todo mês de "aluguel"!
-            </span>
+            <div className="space-y-1">
+              <div className="flex justify-between text-[11px]">
+                <span className="text-slate-400">Progresso da Bola de Neve:</span>
+                <span className="text-amber-400 font-bold font-mono">50,5% (Faltam 49 cotas)</span>
+              </div>
+              <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                <div className="bg-amber-400 h-full rounded-full transition-all duration-500" style={{ width: '50.5%' }} />
+              </div>
+            </div>
           </div>
 
           {/* FII 3: HGLG11 */}
           <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/90 space-y-2">
             <div className="flex justify-between items-center">
               <span className="font-bold text-white text-sm">HGLG11</span>
-              <span className="text-[11px] text-emerald-400 font-semibold">Cota ~R$ 162,50</span>
+              <span className="text-[11px] text-indigo-300 font-semibold font-mono">4 cotas em carteira</span>
             </div>
             <div className="text-xs text-slate-300">
-              Dividendo: <strong className="text-emerald-400">R$ 1,10/mês</strong> por cota
+              Dividendo: <strong className="text-emerald-400">R$ 1,10/mês</strong> por cota • <span className="text-slate-400">R$ 4,40/mês atual</span>
             </div>
             <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs flex justify-between items-center">
               <span className="text-slate-400">Número Mágico:</span>
-              <strong className="text-amber-400 font-mono text-sm">148 cotas (~R$ 24,0k)</strong>
+              <strong className="text-amber-400 font-mono text-sm">135 cotas (~R$ 20k)</strong>
             </div>
             <span className="text-[10px] text-slate-500 block">
-              Galpões logísticos de alto padrão gerando nova cota mensal no piloto automático.
+              Galpões logísticos triple-A de padrão institucional gerando renda passiva perpétua.
             </span>
           </div>
         </div>

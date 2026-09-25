@@ -1,4 +1,4 @@
-import type { MonthlyRecord, KPIStats } from '../types/finance';
+import type { MonthlyRecord, KPIStats, B3Asset } from '../types/finance';
 
 export const formatCurrency = (value: number | undefined | null): string => {
   if (value === undefined || value === null || isNaN(value)) return 'R$ 0,00';
@@ -15,8 +15,8 @@ export const formatPercent = (value: number | undefined | null): string => {
   return `${value.toFixed(1)}%`;
 };
 
-export const calculateKPIs = (records: MonthlyRecord[]): KPIStats => {
-  const activeRecords = records.filter(r => r.totalIncome > 0 || r.totalExpenses > 0);
+export const calculateKPIs = (records: MonthlyRecord[], assets?: B3Asset[]): KPIStats => {
+  const activeRecords = records.filter(r => r.totalIncome > 0 || r.totalExpenses > 0 || r.netWorth > 0 || r.savingsItau > 0);
   const current = records.find(r => r.status === 'current') || activeRecords[activeRecords.length - 1] || records[0];
 
   // 2026 stats
@@ -31,7 +31,10 @@ export const calculateKPIs = (records: MonthlyRecord[]): KPIStats => {
 
   const savingsItau = current?.savingsItau || 0;
   const liquidAccount = current?.liquidAccount || 0;
-  const investmentsB3 = 0; // Início da carteira de Ações e FIIs
+  const assetsInvestedTotal = assets && assets.length > 0
+    ? assets.reduce((acc, a) => acc + (a.quantity * (a.averagePrice || a.currentPrice)), 0)
+    : 0;
+  const investmentsB3 = (current?.avenue && current.avenue > 0) ? current.avenue : assetsInvestedTotal;
 
   const totalNetWorth = current?.netWorth > 0
     ? current.netWorth

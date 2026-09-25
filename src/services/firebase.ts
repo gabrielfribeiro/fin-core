@@ -12,6 +12,8 @@ import {
   collection,
   doc,
   setDoc,
+  deleteDoc,
+  getDocs,
   onSnapshot,
   query,
   orderBy
@@ -312,6 +314,31 @@ export const updateB3Asset = async (asset: B3Asset) => {
   if (db && isFirebaseConfigured) {
     const docRef = doc(db, 'b3_assets', asset.ticker);
     await setDoc(docRef, asset, { merge: true });
+  }
+};
+
+export const syncB3AssetsToFirestore = async (assets: B3Asset[]) => {
+  if (db && isFirebaseConfigured) {
+    for (const asset of assets) {
+      const docRef = doc(db, 'b3_assets', asset.ticker);
+      await setDoc(docRef, asset, { merge: true });
+    }
+  }
+};
+
+export const cleanObsoleteB3Assets = async (activeTickers: string[]) => {
+  if (db && isFirebaseConfigured) {
+    try {
+      const q = query(collection(db, 'b3_assets'));
+      const snapshot = await getDocs(q);
+      for (const docSnap of snapshot.docs) {
+        if (!activeTickers.includes(docSnap.id)) {
+          await deleteDoc(doc(db, 'b3_assets', docSnap.id));
+        }
+      }
+    } catch (e) {
+      console.warn('cleanObsoleteB3Assets error:', e);
+    }
   }
 };
 
