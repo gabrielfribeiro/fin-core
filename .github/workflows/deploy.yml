@@ -32,6 +32,7 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
           VITE_AUTHORIZED_EMAIL: ${{ secrets.VITE_AUTHORIZED_EMAIL }}
+          VITE_BRAPI_TOKEN: ${{ secrets.VITE_BRAPI_TOKEN }}
         run: npm run build
 
       - name: Install Latest Vercel CLI
