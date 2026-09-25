@@ -13,6 +13,54 @@ export interface MarketQuoteResult {
   updatedAt: string;
 }
 
+export const LAST_FETCH_DATE_KEY = 'fincore_b3_last_fetch_date';
+export const LAST_FETCH_TIME_KEY = 'fincore_b3_last_fetch_time';
+
+export function getTodayDateString(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
+/**
+ * Returns true only if market data has NOT been fetched yet today
+ */
+export function shouldAutoFetchToday(): boolean {
+  try {
+    const lastDate = localStorage.getItem(LAST_FETCH_DATE_KEY);
+    const today = getTodayDateString();
+    return lastDate !== today;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Records today as fetched in localStorage
+ */
+export function markFetchCompletedToday(): void {
+  try {
+    const today = getTodayDateString();
+    const nowTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    localStorage.setItem(LAST_FETCH_DATE_KEY, today);
+    localStorage.setItem(LAST_FETCH_TIME_KEY, nowTime);
+  } catch (e) {
+    console.warn('localStorage error:', e);
+  }
+}
+
+/**
+ * Get info on the last fetch timestamp and whether today's auto-fetch is done
+ */
+export function getLastFetchInfo(): { date: string | null; time: string | null; isFetchedToday: boolean } {
+  try {
+    const date = localStorage.getItem(LAST_FETCH_DATE_KEY);
+    const time = localStorage.getItem(LAST_FETCH_TIME_KEY);
+    const isFetchedToday = date === getTodayDateString();
+    return { date, time, isFetchedToday };
+  } catch {
+    return { date: null, time: null, isFetchedToday: false };
+  }
+}
+
 /**
  * Fetch live quote for a single B3 ticker via Brapi API
  */
@@ -118,6 +166,10 @@ export async function updatePortfolioWithLiveQuotes(
       return asset;
     })
   );
+
+  if (updatedCount > 0) {
+    markFetchCompletedToday();
+  }
 
   return { updatedAssets, updatedCount };
 }

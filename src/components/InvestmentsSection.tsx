@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Coins, 
   Sparkles, 
@@ -8,11 +8,16 @@ import {
   TrendingUp,
   TrendingDown,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  CalendarCheck
 } from 'lucide-react';
 import type { B3Asset } from '../types/finance';
 import { formatCurrency, formatPercent } from '../utils/formatters';
-import { updatePortfolioWithLiveQuotes } from '../services/marketDataService';
+import { 
+  updatePortfolioWithLiveQuotes, 
+  shouldAutoFetchToday, 
+  getLastFetchInfo 
+} from '../services/marketDataService';
 
 interface InvestmentsSectionProps {
   assets: B3Asset[];
@@ -21,8 +26,10 @@ interface InvestmentsSectionProps {
 export const InvestmentsSection: React.FC<InvestmentsSectionProps> = ({ assets }) => {
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [refreshProgress, setRefreshProgress] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [fetchInfo, setFetchInfo] = useState(getLastFetchInfo());
+
+  const autoFetchTriggeredRef = useRef(false);
 
   const totalInvested = assets.reduce((acc, a) => acc + (a.quantity * (a.averagePrice || a.currentPrice)), 0);
   const totalMarketValue = assets.reduce((acc, a) => acc + (a.quantity * (a.currentPrice || a.averagePrice)), 0);
@@ -34,11 +41,11 @@ export const InvestmentsSection: React.FC<InvestmentsSectionProps> = ({ assets }
     ? assets.reduce((acc, a) => acc + a.dividendYieldYearly, 0) / assets.length
     : 10.0;
 
-  const handleRefreshQuotes = async () => {
+  const handleRefreshQuotes = async (isAuto = false) => {
     try {
       setIsRefreshing(true);
       setSuccessMessage(null);
-      setRefreshProgress('Iniciando conexão com a B3 (Brapi)...');
+      setRefreshProgress(isAuto ? 'Sincronização diária automática (1x/dia)...' : 'Iniciando atualização manual...');
 
       const { updatedCount } = await updatePortfolioWithLiveQuotes(
         assets,
@@ -47,9 +54,14 @@ export const InvestmentsSection: React.FC<InvestmentsSectionProps> = ({ assets }
         }
       );
 
-      const timeStr = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      setLastUpdated(timeStr);
-      setSuccessMessage(`${updatedCount} ativos atualizados com sucesso às ${timeStr}`);
+      const info = getLastFetchInfo();
+      setFetchInfo(info);
+      const timeStr = info.time || new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      setSuccessMessage(
+        isAuto
+          ? `Sincronização diária concluída: ${updatedCount} ativos atualizados às ${timeStr}`
+          : `Atualização manual concluída: ${updatedCount} ativos atualizados com sucesso às ${timeStr}`
+      );
     } catch (err) {
       console.error('Erro ao atualizar cotações:', err);
     } finally {
@@ -57,6 +69,14 @@ export const InvestmentsSection: React.FC<InvestmentsSectionProps> = ({ assets }
       setRefreshProgress(null);
     }
   };
+
+  // Automatic refresh executed only ONCE per day (preserving Brapi API quota)
+  useEffect(() => {
+    if (assets.length > 0 && shouldAutoFetchToday() && !autoFetchTriggeredRef.current) {
+      autoFetchTriggeredRef.current = true;
+      handleRefreshQuotes(true);
+    }
+  }, [assets]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -70,7 +90,7 @@ export const InvestmentsSection: React.FC<InvestmentsSectionProps> = ({ assets }
             </div>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/20">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>API Brapi Conectada</span>
+              <span>API Brapi (1x/dia auto)</span>
             </div>
           </div>
           <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
@@ -215,21 +235,35 @@ export const InvestmentsSection: React.FC<InvestmentsSectionProps> = ({ assets }
             </h3>
             <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
               <span>{assets.length} ativos monitorados</span>
-              {lastUpdated && (
+              {fetchInfo.time && (
                 <>
                   <span>•</span>
                   <span className="flex items-center gap-1 text-slate-400">
-                    <Clock className="w-3 h-3 text-slate-400" /> Cotações das {lastUpdated}
+                    <Clock className="w-3 h-3 text-slate-400" /> Última busca: {fetchInfo.time}
                   </span>
                 </>
               )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {fetchInfo.isFetchedToday ? (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/70 border border-emerald-500/30 text-xs text-emerald-300">
+                <CalendarCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Atualizado hoje {fetchInfo.time ? `às ${fetchInfo.time}` : ''}</span>
+                <span className="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded font-mono">1x/dia</span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300">
+                <Clock className="w-3.5 h-3.5 text-amber-400" />
+                <span>Cotação de hoje pendente</span>
+              </div>
+            )}
+
             <button
-              onClick={handleRefreshQuotes}
+              onClick={() => handleRefreshQuotes(false)}
               disabled={isRefreshing}
+              title="Forçar atualização das cotações em tempo real da B3"
               className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer border shadow-sm ${
                 isRefreshing
                   ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30 cursor-not-allowed'
@@ -237,7 +271,7 @@ export const InvestmentsSection: React.FC<InvestmentsSectionProps> = ({ assets }
               }`}
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-              <span>{isRefreshing ? (refreshProgress || 'Atualizando...') : 'Atualizar Cotações B3'}</span>
+              <span>{isRefreshing ? (refreshProgress || 'Atualizando...') : 'Atualizar Cotações (Manual)'}</span>
             </button>
           </div>
         </div>
