@@ -107,5 +107,15 @@ Sempre que Gabriel enviar uma mensagem do tipo:
    - Indicar claramente o mês que está sendo consolidado.
 
 3. **Atualização no Firestore**:
-   - Salvar os dados exclusivamente no documento do mês correspondente em `monthly_records/{YYYY-MM}` com `status: 'completed'`.
+   - Salvar os dados exclusivamente no documento do mês correspondente em `monthly_records/{YYYY-MM}` com `status: 'current'` (ou `completed`).
    - **NÃO** sobrescrever nem duplicar esses valores de faturas e PLR nos meses projetados futuros.
+
+4. **Sincronização Cruzada Entre Todas as Telas**:
+   - **Financiamentos (`financing_contracts` & `mrv_installments`)**:
+     - Abater o pagamento do carro no saldo devedor e decrementar as parcelas restantes.
+     - Atualizar o juro de obra do mês na CAIXA.
+     - Marcar os boletos pagos da MRV (ex: M017, RI18) com `status: 'pago'` e data de quitação, recalculando o total certo restante.
+   - **Investimentos (`b3_assets`)**:
+     - Cadastrar/atualizar cotas, preço médio e dividendos de FIIs e ações.
+   - **Visão Geral e Histórico**:
+     - Atualizar automaticamente o patrimônio líquido total, o progresso da meta de 2027 e o saldo de caixa.
