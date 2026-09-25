@@ -167,22 +167,26 @@ export function App() {
     car: number,
     apartment: number,
     itauCard: number,
+    nubank: number,
     reserveAmount: number,
-    b3Amount: number
+    b3Amount: number,
+    liquidAccount: number,
+    savingsItau: number
   ) => {
     const targetInfo = getNextMonthInfo(selectedMonthId);
     const targetId = targetInfo.nextMonthId;
     const lastRecord = records[records.length - 1];
     const existingTarget = records.find(r => r.id === targetId);
     
-    const previousReserve = existingTarget ? existingTarget.savingsItau : (lastRecord?.savingsItau || 0);
+    const previousReserve = savingsItau > 0 ? savingsItau : (existingTarget ? existingTarget.savingsItau : (lastRecord?.savingsItau || 0));
     const previousB3 = existingTarget ? existingTarget.avenue : (lastRecord?.avenue || 0);
 
     const newSavingsItau = previousReserve + reserveAmount;
     const newB3 = previousB3 + b3Amount;
     const totalIncome = salary + extraIncome;
-    const totalExpenses = car + apartment + itauCard;
+    const totalExpenses = car + apartment + itauCard + nubank;
     const monthlyBalance = totalIncome - totalExpenses - reserveAmount - b3Amount;
+    const remainingLiquid = Math.max(0, liquidAccount - reserveAmount - b3Amount);
 
     const refMonthRecord = records.find(r => r.id === selectedMonthId);
     const refLabel = refMonthRecord ? `${refMonthRecord.month}/${refMonthRecord.year}` : selectedMonthId;
@@ -198,20 +202,54 @@ export function App() {
       car,
       apartment,
       itau: itauCard,
-      nubank: 0,
+      nubank,
       fuel: 0,
       looseBills: 0,
       totalExpenses,
       monthlyBalance,
       savingsItau: newSavingsItau,
       avenue: newB3,
-      liquidAccount: 0,
+      liquidAccount: remainingLiquid,
       dollarAmount: 0,
       exchangeRate: 1,
-      netWorth: newSavingsItau + newB3,
+      netWorth: newSavingsItau + newB3 + remainingLiquid,
       status: 'completed',
       notes: `Fechamento do dia 25 (${refLabel} ➔ ${targetInfo.nextMonthLabel}) aplicado diretamente no Firestore.`
     };
+
+    // Atualiza também o mês corrente (ex: Setembro/2026) com os números reais quitados hoje
+    if (selectedMonthId === '2026-09') {
+      const currentMonthUpdated: MonthlyRecord = {
+        id: '2026-09',
+        year: 2026,
+        month: 'Setembro',
+        monthIndex: 9,
+        salary,
+        extraIncome,
+        totalIncome,
+        car,
+        apartment,
+        itau: itauCard,
+        nubank,
+        fuel: 0,
+        looseBills: 0,
+        totalExpenses,
+        monthlyBalance: totalIncome - totalExpenses,
+        savingsItau,
+        avenue: previousB3,
+        liquidAccount,
+        dollarAmount: 0,
+        exchangeRate: 1,
+        netWorth: savingsItau + liquidAccount + previousB3,
+        status: 'completed',
+        notes: 'Fechamento realizado em 25/09: Salário R$ 9.744,19 + PLR R$ 9.544,73. Fatura Itaú, MRV (2 boletos), Juro de Obra Caixa, Carro e Nubank pagos.'
+      };
+      try {
+        await updateMonthlyRecord(currentMonthUpdated);
+      } catch (e) {
+        console.warn('Erro ao atualizar mês corrente:', e);
+      }
+    }
 
     try {
       await updateMonthlyRecord(updatedRecord);

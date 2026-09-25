@@ -31,12 +31,15 @@ interface MonthlyClosingModalProps {
     car: number,
     apartment: number,
     itauCard: number,
+    nubank: number,
     reserveAmount: number,
-    b3Amount: number
+    b3Amount: number,
+    liquidAccount: number,
+    savingsItau: number
   ) => void;
 }
 
-type FieldKey = 'salary' | 'extraIncome' | 'car' | 'apartment' | 'itauCard';
+type FieldKey = 'salary' | 'extraIncome' | 'car' | 'apartment' | 'itauCard' | 'nubank';
 
 interface FieldConfig {
   key: FieldKey;
@@ -56,19 +59,19 @@ const FIELD_CONFIGS: FieldConfig[] = [
     category: 'income',
     icon: Wallet,
     color: 'emerald',
-    defaultItems: [10373.92],
-    placeholder: 'Ex: 10373.92',
+    defaultItems: [9744.19],
+    placeholder: 'Ex: 9744.19',
     helperText: 'Salário mensal líquido recebido'
   },
   {
     key: 'extraIncome',
-    label: 'Renda Extra',
+    label: 'Renda Extra / PLR',
     category: 'income',
     icon: Coins,
     color: 'emerald',
-    defaultItems: [],
-    placeholder: 'Ex: 500.00',
-    helperText: 'Vendas, bônus, freelas ou rendimentos extras'
+    defaultItems: [9544.73],
+    placeholder: 'Ex: 9544.73',
+    helperText: 'Adiantamento de PLR, bônus ou receitas extras'
   },
   {
     key: 'car',
@@ -76,8 +79,8 @@ const FIELD_CONFIGS: FieldConfig[] = [
     category: 'expense',
     icon: Car,
     color: 'rose',
-    defaultItems: [2570.52],
-    placeholder: 'Ex: 2570.52',
+    defaultItems: [2562.95],
+    placeholder: 'Ex: 2562.95',
     helperText: 'Parcela fixa mensal do veículo'
   },
   {
@@ -86,8 +89,8 @@ const FIELD_CONFIGS: FieldConfig[] = [
     category: 'expense',
     icon: Building,
     color: 'rose',
-    defaultItems: [597.23, 466.19], // Caixa Juros de Obra (~597) + MRV Parcela (466.19)
-    placeholder: 'Ex: 1063.42',
+    defaultItems: [2113.43, 370.94, 697.06], // Juros de obra Caixa (2113.43) + Boletos MRV (370.94 e 697.06)
+    placeholder: 'Ex: 3181.43',
     helperText: 'Juros de obra da Caixa + parcelas da MRV'
   },
   {
@@ -96,9 +99,19 @@ const FIELD_CONFIGS: FieldConfig[] = [
     category: 'expense',
     icon: CreditCard,
     color: 'amber',
-    defaultItems: [4177.82], // Fatura real fechada de Set/2026
+    defaultItems: [4177.82],
     placeholder: 'Ex: 4177.82',
-    helperText: 'Fatura fechada para pagamento no dia 28'
+    helperText: 'Fatura paga do cartão Itaú Black'
+  },
+  {
+    key: 'nubank',
+    label: 'Fatura Cartão Nubank',
+    category: 'expense',
+    icon: CreditCard,
+    color: 'purple',
+    defaultItems: [392.16],
+    placeholder: 'Ex: 392.16',
+    helperText: 'Fatura paga do Nubank'
   }
 ];
 
@@ -110,14 +123,18 @@ export const MonthlyClosingModal: React.FC<MonthlyClosingModalProps> = ({
   currentMonthLabel = 'Setembro/2026',
   onConfirmClosing
 }) => {
-  // Store items array for each field
+  // Store items array for each field with today's real numbers
   const [fieldItems, setFieldItems] = useState<Record<FieldKey, number[]>>({
-    salary: [10373.92],
-    extraIncome: [],
-    car: [2570.52],
-    apartment: [597.23, 466.19],
-    itauCard: [4177.82]
+    salary: [9744.19],
+    extraIncome: [9544.73],
+    car: [2562.95],
+    apartment: [2113.43, 370.94, 697.06],
+    itauCard: [4177.82],
+    nubank: [392.16]
   });
+
+  const [liquidAccount, setLiquidAccount] = useState<number>(9200.30);
+  const [savingsItau, setSavingsItau] = useState<number>(3144.72);
 
   // State for the active multi-sum calculator popover/modal
   const [activeCalcField, setActiveCalcField] = useState<FieldKey | null>(null);
@@ -137,9 +154,10 @@ export const MonthlyClosingModal: React.FC<MonthlyClosingModalProps> = ({
   const car = getFieldTotal('car');
   const apartment = getFieldTotal('apartment');
   const itauCard = getFieldTotal('itauCard');
+  const nubank = getFieldTotal('nubank');
 
   const totalIncome = salary + extraIncome;
-  const totalExpenses = car + apartment + itauCard;
+  const totalExpenses = car + apartment + itauCard + nubank;
   const surplus = Math.max(totalIncome - totalExpenses, 0);
 
   // 50% to emergency reserve, 50% to B3
@@ -204,15 +222,19 @@ export const MonthlyClosingModal: React.FC<MonthlyClosingModalProps> = ({
 
   const chatMessage = `Fechamento do Dia 25 (${currentMonthLabel} ➔ ${targetMonthLabel}):
 - Salário Líquido: ${formatCurrency(salary)}
-- Renda Extra: ${formatCurrency(extraIncome)}
+- Renda Extra / PLR: ${formatCurrency(extraIncome)}
 - Total de Receitas: ${formatCurrency(totalIncome)}
 - Financiamento Carro: ${formatCurrency(car)}
 - Apartamento (Caixa + MRV): ${formatCurrency(apartment)}
 - Fatura Cartão Itaú: ${formatCurrency(itauCard)}
+- Fatura Nubank: ${formatCurrency(nubank)}
 - Total de Despesas: ${formatCurrency(totalExpenses)}
 - Sobra Líquida: ${formatCurrency(surplus)}
-- Aporte Reserva de Emergência (50%): ${formatCurrency(reserveAllocation)}
-- Aporte Carteira B3 (50%): ${formatCurrency(b3Allocation)}`;
+- Saldo em Conta Corrente: ${formatCurrency(liquidAccount)}
+- Guardado no Itaú (Reserva): ${formatCurrency(savingsItau)}
+- Patrimônio Imediato: ${formatCurrency(liquidAccount + savingsItau)}
+- Sugestão Reserva de Emergência (50%): ${formatCurrency(reserveAllocation)}
+- Sugestão Carteira B3 (50%): ${formatCurrency(b3Allocation)}`;
 
   const handleCopyChat = () => {
     navigator.clipboard.writeText(chatMessage);
@@ -221,7 +243,18 @@ export const MonthlyClosingModal: React.FC<MonthlyClosingModalProps> = ({
   };
 
   const handleApply = () => {
-    onConfirmClosing(salary, extraIncome, car, apartment, itauCard, reserveAllocation, b3Allocation);
+    onConfirmClosing(
+      salary,
+      extraIncome,
+      car,
+      apartment,
+      itauCard,
+      nubank,
+      reserveAllocation,
+      b3Allocation,
+      liquidAccount,
+      savingsItau
+    );
     onClose();
   };
 
@@ -384,6 +417,43 @@ export const MonthlyClosingModal: React.FC<MonthlyClosingModalProps> = ({
                   </div>
                 );
               })}
+            </div>
+          </div>
+
+          {/* Section 3: Saldos Reais em Caixa e Reserva */}
+          <div className="bg-slate-950/80 border border-slate-800/90 rounded-2xl p-3 space-y-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+              <Wallet className="w-3.5 h-3.5" /> Saldos e Reserva Atual
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-slate-300">Saldo em Conta Corrente:</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-xs text-slate-500 font-mono">R$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={liquidAccount || ''}
+                    onChange={(e) => setLiquidAccount(parseFloat(e.target.value) || 0)}
+                    placeholder="9200.30"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-slate-300">Guardado no Itaú (Reserva):</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-xs text-slate-500 font-mono">R$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={savingsItau || ''}
+                    onChange={(e) => setSavingsItau(parseFloat(e.target.value) || 0)}
+                    placeholder="3144.72"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs font-mono font-bold text-white focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
