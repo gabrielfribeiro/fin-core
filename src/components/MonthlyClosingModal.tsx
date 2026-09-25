@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, 
   PiggyBank, 
@@ -17,15 +17,17 @@ import {
   Check,
   X
 } from 'lucide-react';
+import type { MonthlyRecord } from '../types/finance';
 import { formatCurrency } from '../utils/formatters';
 
 interface MonthlyClosingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  targetMonthId?: string;
-  targetMonthLabel?: string;
-  currentMonthLabel?: string;
+  selectedMonthId: string;
+  selectedMonthLabel: string;
+  currentRecord?: MonthlyRecord;
   onConfirmClosing: (
+    monthId: string,
     salary: number,
     extraIncome: number,
     car: number,
@@ -47,7 +49,6 @@ interface FieldConfig {
   category: 'income' | 'expense';
   icon: React.ElementType;
   color: string;
-  defaultItems: number[];
   placeholder: string;
   helperText: string;
 }
@@ -59,9 +60,8 @@ const FIELD_CONFIGS: FieldConfig[] = [
     category: 'income',
     icon: Wallet,
     color: 'emerald',
-    defaultItems: [9744.19],
-    placeholder: 'Ex: 9744.19',
-    helperText: 'Salário mensal líquido recebido'
+    placeholder: '0,00',
+    helperText: 'Salário líquido creditado no dia 25'
   },
   {
     key: 'extraIncome',
@@ -69,8 +69,7 @@ const FIELD_CONFIGS: FieldConfig[] = [
     category: 'income',
     icon: Coins,
     color: 'emerald',
-    defaultItems: [9544.73],
-    placeholder: 'Ex: 9544.73',
+    placeholder: '0,00',
     helperText: 'Adiantamento de PLR, bônus ou receitas extras'
   },
   {
@@ -79,9 +78,8 @@ const FIELD_CONFIGS: FieldConfig[] = [
     category: 'expense',
     icon: Car,
     color: 'rose',
-    defaultItems: [2562.95],
-    placeholder: 'Ex: 2562.95',
-    helperText: 'Parcela fixa mensal do veículo'
+    placeholder: '0,00',
+    helperText: 'Parcela mensal do veículo'
   },
   {
     key: 'apartment',
@@ -89,9 +87,8 @@ const FIELD_CONFIGS: FieldConfig[] = [
     category: 'expense',
     icon: Building,
     color: 'rose',
-    defaultItems: [2113.43, 370.94, 697.06], // Juros de obra Caixa (2113.43) + Boletos MRV (370.94 e 697.06)
-    placeholder: 'Ex: 3181.43',
-    helperText: 'Juros de obra da Caixa + parcelas da MRV'
+    placeholder: '0,00',
+    helperText: 'Juros de obra da Caixa + boletos da MRV'
   },
   {
     key: 'itauCard',
@@ -99,9 +96,8 @@ const FIELD_CONFIGS: FieldConfig[] = [
     category: 'expense',
     icon: CreditCard,
     color: 'amber',
-    defaultItems: [4177.82],
-    placeholder: 'Ex: 4177.82',
-    helperText: 'Fatura paga do cartão Itaú Black'
+    placeholder: '0,00',
+    helperText: 'Fatura fechada para pagamento no dia 28'
   },
   {
     key: 'nubank',
@@ -109,32 +105,60 @@ const FIELD_CONFIGS: FieldConfig[] = [
     category: 'expense',
     icon: CreditCard,
     color: 'purple',
-    defaultItems: [392.16],
-    placeholder: 'Ex: 392.16',
-    helperText: 'Fatura paga do Nubank'
+    placeholder: '0,00',
+    helperText: 'Fatura do cartão Nubank'
   }
 ];
 
 export const MonthlyClosingModal: React.FC<MonthlyClosingModalProps> = ({
   isOpen,
   onClose,
-  targetMonthId: _targetMonthId = '2026-10',
-  targetMonthLabel = 'Outubro/2026',
-  currentMonthLabel = 'Setembro/2026',
+  selectedMonthId,
+  selectedMonthLabel,
+  currentRecord,
   onConfirmClosing
 }) => {
-  // Store items array for each field with today's real numbers
+  // Store items array for each field - dynamically loaded from Firestore record or empty
   const [fieldItems, setFieldItems] = useState<Record<FieldKey, number[]>>({
-    salary: [9744.19],
-    extraIncome: [9544.73],
-    car: [2562.95],
-    apartment: [2113.43, 370.94, 697.06],
-    itauCard: [4177.82],
-    nubank: [392.16]
+    salary: [],
+    extraIncome: [],
+    car: [],
+    apartment: [],
+    itauCard: [],
+    nubank: []
   });
 
-  const [liquidAccount, setLiquidAccount] = useState<number>(9200.30);
-  const [savingsItau, setSavingsItau] = useState<number>(3144.72);
+  const [liquidAccount, setLiquidAccount] = useState<number>(0);
+  const [savingsItau, setSavingsItau] = useState<number>(0);
+
+  // Sync state whenever modal opens or currentRecord updates
+  useEffect(() => {
+    if (isOpen) {
+      if (currentRecord) {
+        setFieldItems({
+          salary: currentRecord.salary > 0 ? [currentRecord.salary] : [],
+          extraIncome: currentRecord.extraIncome > 0 ? [currentRecord.extraIncome] : [],
+          car: currentRecord.car > 0 ? [currentRecord.car] : [],
+          apartment: currentRecord.apartment > 0 ? [currentRecord.apartment] : [],
+          itauCard: currentRecord.itau > 0 ? [currentRecord.itau] : [],
+          nubank: currentRecord.nubank > 0 ? [currentRecord.nubank] : []
+        });
+        setLiquidAccount(currentRecord.liquidAccount || 0);
+        setSavingsItau(currentRecord.savingsItau || 0);
+      } else {
+        setFieldItems({
+          salary: [],
+          extraIncome: [],
+          car: [],
+          apartment: [],
+          itauCard: [],
+          nubank: []
+        });
+        setLiquidAccount(0);
+        setSavingsItau(0);
+      }
+    }
+  }, [isOpen, currentRecord]);
 
   // State for the active multi-sum calculator popover/modal
   const [activeCalcField, setActiveCalcField] = useState<FieldKey | null>(null);
@@ -220,7 +244,7 @@ export const MonthlyClosingModal: React.FC<MonthlyClosingModalProps> = ({
     }
   };
 
-  const chatMessage = `Fechamento do Dia 25 (${currentMonthLabel} ➔ ${targetMonthLabel}):
+  const chatMessage = `Fechamento do Dia 25 (${selectedMonthLabel}):
 - Salário Líquido: ${formatCurrency(salary)}
 - Renda Extra / PLR: ${formatCurrency(extraIncome)}
 - Total de Receitas: ${formatCurrency(totalIncome)}
@@ -244,6 +268,7 @@ export const MonthlyClosingModal: React.FC<MonthlyClosingModalProps> = ({
 
   const handleApply = () => {
     onConfirmClosing(
+      selectedMonthId,
       salary,
       extraIncome,
       car,
@@ -272,10 +297,10 @@ export const MonthlyClosingModal: React.FC<MonthlyClosingModalProps> = ({
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                Fechamento Dia 25 <ArrowRight className="w-4 h-4 text-emerald-400 inline" /> <span className="text-emerald-400">{targetMonthLabel}</span>
+                Fechamento do Mês: <span className="text-emerald-400 font-bold">{selectedMonthLabel}</span>
               </h3>
               <p className="text-xs text-slate-400">
-                Salário recebido no dia 25 ({currentMonthLabel}) pagando as contas e destinando a sobra para o padrão de {targetMonthLabel}
+                Consolidação das contas pagas e destinação da sobra (50% Reserva / 50% B3) no Cloud Firestore
               </p>
             </div>
           </div>
@@ -514,7 +539,7 @@ export const MonthlyClosingModal: React.FC<MonthlyClosingModalProps> = ({
             onClick={handleApply}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition shadow-lg shadow-emerald-500/20 cursor-pointer"
           >
-            <span>Confirmar Fechamento ({targetMonthLabel})</span>
+            <span>Confirmar Fechamento ({selectedMonthLabel})</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>

@@ -24,7 +24,7 @@ interface NavbarProps {
   isFirebaseReady: boolean;
   selectedMonthId: string;
   onSelectMonth: (monthId: string) => void;
-  availableMonths: { id: string; label: string; year: number; month: string }[];
+  availableMonths: { id: string; label: string; year: number; month: string; isCurrent?: boolean }[];
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -136,7 +136,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 >
                   {availableMonths.map((m) => (
                     <option key={m.id} value={m.id} className="bg-slate-950 text-slate-200">
-                      {m.month}/{m.year} {m.id === '2026-09' ? '• Atual' : ''}
+                      {m.month}/{m.year} {m.isCurrent ? '• Atual' : ''}
                     </option>
                   ))}
                 </select>

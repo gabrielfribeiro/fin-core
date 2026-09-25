@@ -16,9 +16,8 @@ export const formatPercent = (value: number | undefined | null): string => {
 };
 
 export const calculateKPIs = (records: MonthlyRecord[]): KPIStats => {
-  // Find current active month (2026-09 or the latest month with salary > 0)
   const activeRecords = records.filter(r => r.totalIncome > 0 || r.totalExpenses > 0);
-  const current = records.find(r => r.id === '2026-09') || activeRecords[activeRecords.length - 1] || records[0];
+  const current = records.find(r => r.status === 'current') || activeRecords[activeRecords.length - 1] || records[0];
 
   // 2026 stats
   const records2026 = records.filter(r => r.year === 2026 && (r.totalIncome > 0 || r.totalExpenses > 0));

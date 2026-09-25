@@ -11,8 +11,8 @@ import {
   subscribeB3Assets,
   isFirebaseConfigured,
   isUserAuthorized,
-  seedFirestore,
-  updateMonthlyRecord
+  updateMonthlyRecord,
+  resetMonthToProjected
 } from './services/firebase';
 import type { 
   MonthlyRecord, 
@@ -21,7 +21,7 @@ import type {
   CreditCardPurchase, 
   B3Asset 
 } from './types/finance';
-import { calculateKPIs, getNextMonthInfo } from './utils/formatters';
+import { calculateKPIs } from './utils/formatters';
 import { Navbar } from './components/Navbar';
 import { LoginScreen } from './components/LoginScreen';
 import { OverviewCards } from './components/OverviewCards';
@@ -133,11 +133,6 @@ export function App() {
           return;
         }
         setUser(loggedUser);
-        try {
-          await seedFirestore();
-        } catch (e) {
-          console.warn('Seed error on login:', e);
-        }
       }
     } catch (err: any) {
       console.error('Login error:', err);
@@ -161,7 +156,16 @@ export function App() {
     setB3Assets([]);
   };
 
+  // One-time cleanup for duplicated October if detected in Firestore
+  useEffect(() => {
+    const oct = records.find(r => r.id === '2026-10');
+    if (oct && (oct.extraIncome > 0 || oct.itau > 0) && oct.notes?.includes('25/09')) {
+      resetMonthToProjected('2026-10', 2026, 'Outubro', 10);
+    }
+  }, [records]);
+
   const handleConfirmClosing = async (
+    monthId: string,
     salary: number,
     extraIncome: number,
     car: number,
@@ -173,29 +177,29 @@ export function App() {
     liquidAccount: number,
     savingsItau: number
   ) => {
-    const targetInfo = getNextMonthInfo(selectedMonthId);
-    const targetId = targetInfo.nextMonthId;
-    const lastRecord = records[records.length - 1];
-    const existingTarget = records.find(r => r.id === targetId);
-    
-    const previousReserve = savingsItau > 0 ? savingsItau : (existingTarget ? existingTarget.savingsItau : (lastRecord?.savingsItau || 0));
-    const previousB3 = existingTarget ? existingTarget.avenue : (lastRecord?.avenue || 0);
+    const existingRecord = records.find(r => r.id === monthId);
+    const [yearStr, monthStr] = monthId.split('-');
+    const year = parseInt(yearStr, 10) || 2026;
+    const monthIndex = parseInt(monthStr, 10) || 9;
+    const MONTH_NAMES = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    const monthName = existingRecord?.month || MONTH_NAMES[monthIndex - 1] || 'Mês';
 
-    const newSavingsItau = previousReserve + reserveAmount;
-    const newB3 = previousB3 + b3Amount;
+    const previousB3 = existingRecord?.avenue || 0;
+    const finalSavingsItau = (savingsItau > 0 ? savingsItau : (existingRecord?.savingsItau || 0)) + reserveAmount;
+    const finalB3 = previousB3 + b3Amount;
     const totalIncome = salary + extraIncome;
     const totalExpenses = car + apartment + itauCard + nubank;
     const monthlyBalance = totalIncome - totalExpenses - reserveAmount - b3Amount;
-    const remainingLiquid = Math.max(0, liquidAccount - reserveAmount - b3Amount);
-
-    const refMonthRecord = records.find(r => r.id === selectedMonthId);
-    const refLabel = refMonthRecord ? `${refMonthRecord.month}/${refMonthRecord.year}` : selectedMonthId;
+    const finalLiquid = Math.max(0, liquidAccount - reserveAmount - b3Amount);
 
     const updatedRecord: MonthlyRecord = {
-      id: targetId,
-      year: targetInfo.year,
-      month: targetInfo.monthName,
-      monthIndex: targetInfo.monthIndex,
+      id: monthId,
+      year,
+      month: monthName,
+      monthIndex,
       salary,
       extraIncome,
       totalIncome,
@@ -207,53 +211,19 @@ export function App() {
       looseBills: 0,
       totalExpenses,
       monthlyBalance,
-      savingsItau: newSavingsItau,
-      avenue: newB3,
-      liquidAccount: remainingLiquid,
+      savingsItau: finalSavingsItau,
+      avenue: finalB3,
+      liquidAccount: finalLiquid,
       dollarAmount: 0,
       exchangeRate: 1,
-      netWorth: newSavingsItau + newB3 + remainingLiquid,
+      netWorth: finalSavingsItau + finalB3 + finalLiquid,
       status: 'completed',
-      notes: `Fechamento do dia 25 (${refLabel} ➔ ${targetInfo.nextMonthLabel}) aplicado diretamente no Firestore.`
+      notes: `Fechamento do dia 25 (${monthName}/${year}) consolidado com sucesso no Firestore.`
     };
-
-    // Atualiza também o mês corrente (ex: Setembro/2026) com os números reais quitados hoje
-    if (selectedMonthId === '2026-09') {
-      const currentMonthUpdated: MonthlyRecord = {
-        id: '2026-09',
-        year: 2026,
-        month: 'Setembro',
-        monthIndex: 9,
-        salary,
-        extraIncome,
-        totalIncome,
-        car,
-        apartment,
-        itau: itauCard,
-        nubank,
-        fuel: 0,
-        looseBills: 0,
-        totalExpenses,
-        monthlyBalance: totalIncome - totalExpenses,
-        savingsItau,
-        avenue: previousB3,
-        liquidAccount,
-        dollarAmount: 0,
-        exchangeRate: 1,
-        netWorth: savingsItau + liquidAccount + previousB3,
-        status: 'completed',
-        notes: 'Fechamento realizado em 25/09: Salário R$ 9.744,19 + PLR R$ 9.544,73. Fatura Itaú, MRV (2 boletos), Juro de Obra Caixa, Carro e Nubank pagos.'
-      };
-      try {
-        await updateMonthlyRecord(currentMonthUpdated);
-      } catch (e) {
-        console.warn('Erro ao atualizar mês corrente:', e);
-      }
-    }
 
     try {
       await updateMonthlyRecord(updatedRecord);
-      setSelectedMonthId(targetId);
+      setSelectedMonthId(monthId);
     } catch (e) {
       console.error('Erro ao atualizar fechamento no Firestore:', e);
     }
@@ -311,10 +281,12 @@ export function App() {
     id: r.id,
     label: `${r.month}/${r.year}`,
     year: r.year,
-    month: r.month
+    month: r.month,
+    isCurrent: r.status === 'current'
   }));
-  const nextMonthInfo = getNextMonthInfo(selectedMonthId);
-  const currentRecord = records.find(r => r.id === selectedMonthId) || records.find(r => r.id === '2026-09') || records[records.length - 1];
+  const currentRecord = records.find(r => r.id === selectedMonthId) || 
+                        records.find(r => r.status === 'current') || 
+                        records[records.length - 1];
 
   return (
     <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col selection:bg-emerald-500/30 selection:text-emerald-300">
@@ -389,9 +361,9 @@ export function App() {
       <MonthlyClosingModal
         isOpen={isClosingModalOpen}
         onClose={() => setIsClosingModalOpen(false)}
-        targetMonthId={nextMonthInfo.nextMonthId}
-        targetMonthLabel={nextMonthInfo.nextMonthLabel}
-        currentMonthLabel={currentRecord ? `${currentRecord.month}/${currentRecord.year}` : 'Setembro/2026'}
+        selectedMonthId={selectedMonthId}
+        selectedMonthLabel={currentRecord ? `${currentRecord.month}/${currentRecord.year}` : selectedMonthId}
+        currentRecord={currentRecord}
         onConfirmClosing={handleConfirmClosing}
       />
 

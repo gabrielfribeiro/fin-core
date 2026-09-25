@@ -91,7 +91,7 @@ export const MonthlyTable: React.FC<MonthlyTableProps> = ({ records }) => {
                 </tr>
               ) : (
                 filteredRecords.map((rec) => {
-                  const isCurrent = rec.id === '2026-09';
+                  const isCurrent = rec.status === 'current';
                   const isPositive = rec.monthlyBalance >= 0;
                   const hasData = rec.totalIncome > 0 || rec.totalExpenses > 0;
 
