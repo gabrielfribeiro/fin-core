@@ -156,6 +156,39 @@ export function App() {
     setB3Assets([]);
   };
 
+  // Ensure September is restored to its exact original values if changed
+  useEffect(() => {
+    const sep = records.find(r => r.id === '2026-09');
+    if (sep && sep.totalIncome === 19288.92) {
+      const originalSeptember: MonthlyRecord = {
+        id: "2026-09",
+        year: 2026,
+        month: "Setembro",
+        monthIndex: 9,
+        salary: 10373.92,
+        extraIncome: 0,
+        totalIncome: 10373.92,
+        car: 2561.44,
+        apartment: 3124.58,
+        itau: 4177.82,
+        nubank: 0,
+        fuel: 0,
+        looseBills: 177.89,
+        totalExpenses: 10041.73,
+        monthlyBalance: 332.19,
+        savingsItau: 3124.69,
+        avenue: 0,
+        liquidAccount: 411.54,
+        dollarAmount: 0,
+        exchangeRate: 0,
+        netWorth: 3536.23,
+        notes: "Fatura Itaú Black fechada em R$ 4.177,82 (Venc. 28/09/2026)",
+        status: "current"
+      };
+      updateMonthlyRecord(originalSeptember);
+    }
+  }, [records]);
+
   // One-time cleanup for duplicated October if detected in Firestore
   useEffect(() => {
     const oct = records.find(r => r.id === '2026-10');
