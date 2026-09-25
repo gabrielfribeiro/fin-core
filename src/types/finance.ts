@@ -58,6 +58,10 @@ export interface B3Asset {
   currentPrice: number;
   monthlyDividendPerShare: number;
   dividendYieldYearly: number;
+  change?: number;
+  changePercent?: number;
+  logoUrl?: string;
+  updatedAt?: string;
 }
 
 export interface CreditCardPurchase {
