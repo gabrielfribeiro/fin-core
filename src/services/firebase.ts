@@ -12,6 +12,8 @@ import {
   collection,
   doc,
   setDoc,
+  deleteDoc,
+  getDocs,
   onSnapshot,
   query,
   orderBy
@@ -21,14 +23,16 @@ import type {
   FinancingContract, 
   MRVInstallment, 
   CreditCardPurchase, 
-  B3Asset 
+  B3Asset,
+  InvestmentTransaction
 } from '../types/finance';
 import { 
   INITIAL_MONTHLY_RECORDS, 
   INITIAL_FINANCING_CONTRACTS,
   INITIAL_MRV_INSTALLMENTS,
   INITIAL_CARD_PURCHASES,
-  INITIAL_B3_ASSETS
+  INITIAL_B3_ASSETS,
+  INITIAL_B3_TRANSACTIONS
 } from '../data/initialData';
 
 const firebaseConfig = {
@@ -293,6 +297,41 @@ export const subscribeB3Assets = (
   });
 };
 
+// 6. B3 Investment Transactions (Histórico de Ordens / Compras)
+export const subscribeB3Transactions = (
+  callback: (transactions: InvestmentTransaction[]) => void
+) => {
+  if (!db || !isFirebaseConfigured) {
+    callback(INITIAL_B3_TRANSACTIONS);
+    return () => {};
+  }
+
+  const q = query(collection(db, 'b3_transactions'), orderBy('date', 'desc'));
+  return onSnapshot(q, async (snapshot) => {
+    if (snapshot.empty) {
+      callback(INITIAL_B3_TRANSACTIONS);
+      if (auth?.currentUser) {
+        try {
+          for (const tx of INITIAL_B3_TRANSACTIONS) {
+            await setDoc(doc(db, 'b3_transactions', tx.id), tx, { merge: true });
+          }
+        } catch (e) {
+          console.warn('Auto-seed b3_transactions error:', e);
+        }
+      }
+    } else {
+      const items: InvestmentTransaction[] = [];
+      snapshot.forEach((docSnap) => {
+        items.push(docSnap.data() as InvestmentTransaction);
+      });
+      callback(items);
+    }
+  }, (err) => {
+    console.warn('Firestore b3_transactions error:', err);
+    callback(INITIAL_B3_TRANSACTIONS);
+  });
+};
+
 // Update helpers (directly to Cloud Firestore)
 export const updateMonthlyRecord = async (record: MonthlyRecord) => {
   if (db && isFirebaseConfigured) {
@@ -312,5 +351,85 @@ export const updateB3Asset = async (asset: B3Asset) => {
   if (db && isFirebaseConfigured) {
     const docRef = doc(db, 'b3_assets', asset.ticker);
     await setDoc(docRef, asset, { merge: true });
+  }
+};
+
+export const syncB3AssetsToFirestore = async (assets: B3Asset[]) => {
+  if (db && isFirebaseConfigured) {
+    for (const asset of assets) {
+      const docRef = doc(db, 'b3_assets', asset.ticker);
+      await setDoc(docRef, asset, { merge: true });
+    }
+  }
+};
+
+export const cleanObsoleteB3Assets = async (activeTickers: string[]) => {
+  if (db && isFirebaseConfigured) {
+    try {
+      const q = query(collection(db, 'b3_assets'));
+      const snapshot = await getDocs(q);
+      for (const docSnap of snapshot.docs) {
+        if (!activeTickers.includes(docSnap.id)) {
+          await deleteDoc(doc(db, 'b3_assets', docSnap.id));
+        }
+      }
+    } catch (e) {
+      console.warn('cleanObsoleteB3Assets error:', e);
+    }
+  }
+};
+
+export const addB3Transaction = async (tx: InvestmentTransaction) => {
+  if (db && isFirebaseConfigured) {
+    const docRef = doc(db, 'b3_transactions', tx.id);
+    await setDoc(docRef, tx, { merge: true });
+  }
+};
+
+export const deleteB3Transaction = async (id: string) => {
+  if (db && isFirebaseConfigured) {
+    const docRef = doc(db, 'b3_transactions', id);
+    await deleteDoc(docRef);
+  }
+};
+
+export const syncB3TransactionsToFirestore = async (transactions: InvestmentTransaction[]) => {
+  if (db && isFirebaseConfigured) {
+    for (const tx of transactions) {
+      const docRef = doc(db, 'b3_transactions', tx.id);
+      await setDoc(docRef, tx, { merge: true });
+    }
+  }
+};
+
+export const updateFinancingContract = async (contract: FinancingContract) => {
+  if (db && isFirebaseConfigured) {
+    const docRef = doc(db, 'financing_contracts', contract.id);
+    await setDoc(docRef, contract, { merge: true });
+  }
+};
+
+export const updateMRVInstallment = async (installment: MRVInstallment) => {
+  if (db && isFirebaseConfigured) {
+    const docRef = doc(db, 'mrv_installments', installment.code);
+    await setDoc(docRef, installment, { merge: true });
+  }
+};
+
+export const syncFinancingContractsToFirestore = async (contracts: FinancingContract[]) => {
+  if (db && isFirebaseConfigured) {
+    for (const contract of contracts) {
+      const docRef = doc(db, 'financing_contracts', contract.id);
+      await setDoc(docRef, contract, { merge: true });
+    }
+  }
+};
+
+export const syncMRVInstallmentsToFirestore = async (installments: MRVInstallment[]) => {
+  if (db && isFirebaseConfigured) {
+    for (const inst of installments) {
+      const docRef = doc(db, 'mrv_installments', inst.code);
+      await setDoc(docRef, inst, { merge: true });
+    }
   }
 };

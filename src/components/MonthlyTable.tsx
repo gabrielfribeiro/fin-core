@@ -17,38 +17,68 @@ interface MonthlyTableProps {
 
 export const MonthlyTable: React.FC<MonthlyTableProps> = ({ records }) => {
   const [selectedYear, setSelectedYear] = useState<string>('2026');
+  const [selectedMonthFilter, setSelectedMonthFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedRecord, setSelectedRecord] = useState<MonthlyRecord | null>(null);
 
   const filteredRecords = records.filter(r => {
     const matchesYear = selectedYear === 'all' || r.year.toString() === selectedYear;
+    const matchesMonth = selectedMonthFilter === 'all' || r.monthIndex.toString() === selectedMonthFilter;
     const matchesSearch = searchQuery === '' || 
       r.month.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (r.notes && r.notes.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesYear && matchesSearch;
+    return matchesYear && matchesMonth && matchesSearch;
   });
 
   return (
     <div className="space-y-6">
       {/* Table Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/90 border border-slate-800 p-4 rounded-2xl">
-        <div className="flex items-center space-x-2">
-          <Filter className="w-4 h-4 text-slate-400" />
-          <span className="text-xs font-semibold text-slate-300">Ano:</span>
-          <div className="flex items-center space-x-1">
-            {['2025', '2026', '2027', 'all'].map((yr) => (
-              <button
-                key={yr}
-                onClick={() => setSelectedYear(yr)}
-                className={`px-3 py-1 rounded-lg text-xs font-medium transition ${
-                  selectedYear === yr
-                    ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                }`}
-              >
-                {yr === 'all' ? 'Todos' : yr}
-              </button>
-            ))}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Filter Year */}
+          <div className="flex items-center space-x-2">
+            <Filter className="w-4 h-4 text-slate-400" />
+            <span className="text-xs font-semibold text-slate-300">Ano:</span>
+            <div className="flex items-center space-x-1">
+              {['2025', '2026', '2027', 'all'].map((yr) => (
+                <button
+                  key={yr}
+                  onClick={() => setSelectedYear(yr)}
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition ${
+                    selectedYear === yr
+                      ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  {yr === 'all' ? 'Todos' : yr}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Separação por Mês (exclusiva da tela de Histórico) */}
+          <div className="flex items-center space-x-1.5 bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1 text-xs">
+            <Calendar className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span className="text-slate-400 font-medium">Mês:</span>
+            <select
+              value={selectedMonthFilter}
+              onChange={(e) => setSelectedMonthFilter(e.target.value)}
+              className="bg-transparent text-white font-semibold focus:outline-none cursor-pointer text-xs pr-1"
+            >
+              <option value="all" className="bg-slate-900 text-slate-200">Todos os Meses</option>
+              <option value="1" className="bg-slate-900 text-slate-200">Janeiro</option>
+              <option value="2" className="bg-slate-900 text-slate-200">Fevereiro</option>
+              <option value="3" className="bg-slate-900 text-slate-200">Março</option>
+              <option value="4" className="bg-slate-900 text-slate-200">Abril</option>
+              <option value="5" className="bg-slate-900 text-slate-200">Maio</option>
+              <option value="6" className="bg-slate-900 text-slate-200">Junho</option>
+              <option value="7" className="bg-slate-900 text-slate-200">Julho</option>
+              <option value="8" className="bg-slate-900 text-slate-200">Agosto</option>
+              <option value="9" className="bg-slate-900 text-slate-200">Setembro</option>
+              <option value="10" className="bg-slate-900 text-slate-200">Outubro</option>
+              <option value="11" className="bg-slate-900 text-slate-200">Novembro</option>
+              <option value="12" className="bg-slate-900 text-slate-200">Dezembro</option>
+            </select>
           </div>
         </div>
 
@@ -91,7 +121,7 @@ export const MonthlyTable: React.FC<MonthlyTableProps> = ({ records }) => {
                 </tr>
               ) : (
                 filteredRecords.map((rec) => {
-                  const isCurrent = rec.id === '2026-09';
+                  const isCurrent = rec.status === 'current';
                   const isPositive = rec.monthlyBalance >= 0;
                   const hasData = rec.totalIncome > 0 || rec.totalExpenses > 0;
 

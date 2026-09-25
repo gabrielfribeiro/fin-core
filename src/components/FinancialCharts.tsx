@@ -30,8 +30,7 @@ export const FinancialCharts: React.FC<FinancialChartsProps> = ({ records }) => 
     ? filledRecords.filter(r => r.year === 2026)
     : filledRecords;
 
-  // Latest active record for pie chart distribution
-  const latestRecord = records.find(r => r.id === '2026-09') || filledRecords[filledRecords.length - 1];
+  const latestRecord = records.find(r => r.status === 'current') || filledRecords[filledRecords.length - 1];
 
   const expensesPieData = [
     { name: 'Cartão Itaú', value: latestRecord?.itau || 0, color: '#f97316' }, // orange

@@ -11,16 +11,14 @@ import {
   LineChart,
   ShieldCheck
 } from 'lucide-react';
-import type { KPIStats, MonthlyRecord } from '../types/finance';
+import type { KPIStats } from '../types/finance';
 import { formatCurrency, formatPercent } from '../utils/formatters';
 
 interface OverviewCardsProps {
   kpis: KPIStats;
-  currentRecord: MonthlyRecord | undefined;
 }
 
-export const OverviewCards: React.FC<OverviewCardsProps> = ({ kpis, currentRecord }) => {
-  const monthTitle = currentRecord ? `${currentRecord.month} / ${currentRecord.year}` : 'Mês Atual';
+export const OverviewCards: React.FC<OverviewCardsProps> = ({ kpis }) => {
   const remainingToGoal = Math.max(kpis.goal2027Total - kpis.goal2027Current, 0);
 
   return (
@@ -33,21 +31,21 @@ export const OverviewCards: React.FC<OverviewCardsProps> = ({ kpis, currentRecor
           </div>
           <div>
             <h2 className="text-base font-semibold text-white flex items-center gap-2">
-              Status Atual: <span className="text-emerald-400 font-bold">{monthTitle}</span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-                Regra Salário Dia 25
+              Visão Geral Consolidada
+              <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                Em Tempo Real
               </span>
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">
-              Próxima entrada: Salário de 25/09 abastecerá o ciclo de Outubro/2026.
+              Posição consolidada de caixa, reserva de emergência e metas financeiras
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
           <div className="text-right">
-            <span className="text-[11px] uppercase tracking-wider text-slate-400 block">Patrimônio Líquido</span>
-            <span className="text-lg font-bold text-emerald-400">{formatCurrency(kpis.totalNetWorth)}</span>
+            <span className="text-[11px] uppercase tracking-wider text-slate-400 block">Patrimônio Líquido Total</span>
+            <span className="text-lg sm:text-xl font-bold text-emerald-400 font-mono">{formatCurrency(kpis.totalNetWorth)}</span>
           </div>
         </div>
       </div>

@@ -9,17 +9,28 @@ import {
   subscribeMRVInstallments,
   subscribeCardPurchases,
   subscribeB3Assets,
+  subscribeB3Transactions,
+  addB3Transaction,
+  deleteB3Transaction,
+  updateB3Asset,
   isFirebaseConfigured,
   isUserAuthorized,
-  seedFirestore,
-  updateMonthlyRecord
+  updateMonthlyRecord,
+  syncB3AssetsToFirestore,
+  cleanObsoleteB3Assets,
+  updateFinancingContract,
+  updateMRVInstallment,
+  syncFinancingContractsToFirestore,
+  syncMRVInstallmentsToFirestore,
+  syncB3TransactionsToFirestore
 } from './services/firebase';
 import type { 
   MonthlyRecord, 
   FinancingContract, 
   MRVInstallment, 
   CreditCardPurchase, 
-  B3Asset 
+  B3Asset,
+  InvestmentTransaction
 } from './types/finance';
 import { calculateKPIs } from './utils/formatters';
 import { Navbar } from './components/Navbar';
@@ -36,13 +47,15 @@ import {
   INITIAL_FINANCING_CONTRACTS, 
   INITIAL_MRV_INSTALLMENTS, 
   INITIAL_CARD_PURCHASES, 
-  INITIAL_B3_ASSETS 
+  INITIAL_B3_ASSETS,
+  INITIAL_B3_TRANSACTIONS
 } from './data/initialData';
 import { ShieldAlert, LogOut, Sparkles, Loader2 } from 'lucide-react';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<'overview' | 'table' | 'financing' | 'investments' | 'card'>('overview');
   const [isClosingModalOpen, setIsClosingModalOpen] = useState<boolean>(false);
+  const [selectedMonthId, setSelectedMonthId] = useState<string>('2026-10');
   
   // States initialized with real data, synced continuously with Cloud Firestore
   const [records, setRecords] = useState<MonthlyRecord[]>(INITIAL_MONTHLY_RECORDS);
@@ -50,6 +63,7 @@ export function App() {
   const [mrvSchedule, setMrvSchedule] = useState<MRVInstallment[]>(INITIAL_MRV_INSTALLMENTS);
   const [cardPurchases, setCardPurchases] = useState<CreditCardPurchase[]>(INITIAL_CARD_PURCHASES);
   const [b3Assets, setB3Assets] = useState<B3Asset[]>(INITIAL_B3_ASSETS);
+  const [b3Transactions, setB3Transactions] = useState<InvestmentTransaction[]>(INITIAL_B3_TRANSACTIONS);
 
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState<boolean>(true);
@@ -87,6 +101,7 @@ export function App() {
       setMrvSchedule([]);
       setCardPurchases([]);
       setB3Assets([]);
+      setB3Transactions([]);
       return;
     }
 
@@ -110,12 +125,17 @@ export function App() {
       setB3Assets(data);
     });
 
+    const unsubTransactions = subscribeB3Transactions((data) => {
+      setB3Transactions(data);
+    });
+
     return () => {
       unsubRecords();
       unsubContracts();
       unsubMRV();
       unsubCard();
       unsubB3();
+      unsubTransactions();
     };
   }, [user]);
 
@@ -132,11 +152,6 @@ export function App() {
           return;
         }
         setUser(loggedUser);
-        try {
-          await seedFirestore();
-        } catch (e) {
-          console.warn('Seed error on login:', e);
-        }
       }
     } catch (err: any) {
       console.error('Login error:', err);
@@ -158,57 +173,287 @@ export function App() {
     setMrvSchedule([]);
     setCardPurchases([]);
     setB3Assets([]);
+    setB3Transactions([]);
   };
 
-  const handleConfirmClosing = async (
-    salary: number,
-    bills: number,
-    itauCard: number,
-    reserveAmount: number,
-    b3Amount: number
-  ) => {
-    const targetId = '2026-10';
-    const lastRecord = records[records.length - 1];
-    const existingTarget = records.find(r => r.id === targetId);
-    
-    const previousReserve = existingTarget ? existingTarget.savingsItau : (lastRecord?.savingsItau || 0);
-    const previousB3 = existingTarget ? existingTarget.avenue : (lastRecord?.avenue || 0);
+  // Ensure September is preserved with original spreadsheet values and marked completed
+  useEffect(() => {
+    const sep = records.find(r => r.id === '2026-09');
+    if (sep && (sep.totalIncome === 19288.92 || sep.status === 'current')) {
+      const originalSeptember: MonthlyRecord = {
+        id: "2026-09",
+        year: 2026,
+        month: "Setembro",
+        monthIndex: 9,
+        salary: 10373.92,
+        extraIncome: 0,
+        totalIncome: 10373.92,
+        car: 2561.44,
+        apartment: 3124.58,
+        itau: 4177.82,
+        nubank: 0,
+        fuel: 0,
+        looseBills: 177.89,
+        totalExpenses: 10041.73,
+        monthlyBalance: 332.19,
+        savingsItau: 3124.69,
+        avenue: 0,
+        liquidAccount: 411.54,
+        dollarAmount: 0,
+        exchangeRate: 0,
+        netWorth: 3536.23,
+        notes: "Fatura Itaú Black fechada em R$ 4.177,82 (Venc. 28/09/2026)",
+        status: "completed"
+      };
+      updateMonthlyRecord(originalSeptember);
+    }
+  }, [records]);
 
-    const newSavingsItau = previousReserve + reserveAmount;
-    const newB3 = previousB3 + b3Amount;
-    const totalExpenses = bills + itauCard;
-    const monthlyBalance = salary - totalExpenses - reserveAmount - b3Amount;
+  // Sync October 2026 with real closing numbers and balances
+  useEffect(() => {
+    if (user && isUserAuthorized(user)) {
+      const oct = records.find(r => r.id === '2026-10');
+      if (oct && (oct.salary === 0 || oct.status !== 'current' || oct.savingsItau !== 7144.72)) {
+        const octoberUpdated: MonthlyRecord = {
+          id: "2026-10",
+          year: 2026,
+          month: "Outubro",
+          monthIndex: 10,
+          salary: 9744.19,
+          extraIncome: 9544.73,
+          totalIncome: 19288.92,
+          car: 2562.95,
+          apartment: 3181.43,
+          itau: 4177.82,
+          nubank: 392.16,
+          fuel: 0,
+          looseBills: 0,
+          totalExpenses: 10314.36,
+          monthlyBalance: 8974.56,
+          savingsItau: 7144.72,
+          avenue: 4596.45,
+          liquidAccount: 602.16,
+          dollarAmount: 0,
+          exchangeRate: 1,
+          netWorth: 12343.33,
+          notes: "Fechamento do ciclo 25/09 (Out/2026). Reserva de Emergência Itaú: R$ 7.144,72 | 9 FIIs Nubank: R$ 4.596,45 | Saldo em Conta: R$ 602,16.",
+          status: "current"
+        };
+        updateMonthlyRecord(octoberUpdated);
+      }
+
+      // Sync B3 Assets if missing or quantity 0
+      const hasRealB3 = b3Assets.some(a => a.ticker === 'MXRF11' && a.quantity === 67);
+      if (!hasRealB3) {
+        syncB3AssetsToFirestore(INITIAL_B3_ASSETS);
+        cleanObsoleteB3Assets(INITIAL_B3_ASSETS.map(a => a.ticker));
+      }
+
+      // Sync Financing Contracts if carro still has 45 installments or old balance
+      const carContract = contracts.find(c => c.category === 'carro');
+      if (carContract && (carContract.remainingInstallments > 44 || carContract.totalBalance > 113110.45)) {
+        syncFinancingContractsToFirestore(INITIAL_FINANCING_CONTRACTS);
+      }
+
+      // Sync MRV Installments if M017 is not marked as pago
+      const m17 = mrvSchedule.find(i => i.code === 'M017');
+      if (m17 && m17.status !== 'pago') {
+        syncMRVInstallmentsToFirestore(INITIAL_MRV_INSTALLMENTS);
+      }
+
+      // Sync B3 Transactions if empty
+      const hasRealTransactions = b3Transactions.some(t => t.ticker === 'MXRF11' && t.quantity === 67);
+      if (!hasRealTransactions) {
+        syncB3TransactionsToFirestore(INITIAL_B3_TRANSACTIONS);
+      }
+    }
+  }, [user, records, b3Assets, b3Transactions, contracts, mrvSchedule]);
+
+  const handleConfirmClosing = async (
+    monthId: string,
+    salary: number,
+    extraIncome: number,
+    car: number,
+    apartment: number,
+    itauCard: number,
+    nubank: number,
+    reserveAmount: number,
+    b3Amount: number,
+    liquidAccount: number,
+    savingsItau: number
+  ) => {
+    const existingRecord = records.find(r => r.id === monthId);
+    const [yearStr, monthStr] = monthId.split('-');
+    const year = parseInt(yearStr, 10) || 2026;
+    const monthIndex = parseInt(monthStr, 10) || 9;
+    const MONTH_NAMES = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    const monthName = existingRecord?.month || MONTH_NAMES[monthIndex - 1] || 'Mês';
+
+    const previousB3 = existingRecord?.avenue || 0;
+    const finalSavingsItau = (savingsItau > 0 ? savingsItau : (existingRecord?.savingsItau || 0)) + reserveAmount;
+    const finalB3 = previousB3 + b3Amount;
+    const totalIncome = salary + extraIncome;
+    const totalExpenses = car + apartment + itauCard + nubank;
+    const monthlyBalance = totalIncome - totalExpenses - reserveAmount - b3Amount;
+    const finalLiquid = Math.max(0, liquidAccount - reserveAmount - b3Amount);
 
     const updatedRecord: MonthlyRecord = {
-      id: targetId,
-      year: 2026,
-      month: 'Outubro',
-      monthIndex: 10,
+      id: monthId,
+      year,
+      month: monthName,
+      monthIndex,
       salary,
-      extraIncome: 0,
-      totalIncome: salary,
-      car: 2570.52,
-      apartment: 1063.42,
+      extraIncome,
+      totalIncome,
+      car,
+      apartment,
       itau: itauCard,
-      nubank: 0,
+      nubank,
       fuel: 0,
       looseBills: 0,
       totalExpenses,
       monthlyBalance,
-      savingsItau: newSavingsItau,
-      avenue: newB3,
-      liquidAccount: 0,
+      savingsItau: finalSavingsItau,
+      avenue: finalB3,
+      liquidAccount: finalLiquid,
       dollarAmount: 0,
       exchangeRate: 1,
-      netWorth: newSavingsItau + newB3,
+      netWorth: finalSavingsItau + finalB3 + finalLiquid,
       status: 'completed',
-      notes: 'Fechamento guiado do dia 25 aplicado diretamente no Firestore.'
+      notes: `Fechamento do dia 25 (${monthName}/${year}) consolidado com sucesso no Firestore.`
     };
 
     try {
       await updateMonthlyRecord(updatedRecord);
+      setSelectedMonthId(monthId);
+
+      // Interconnect with Financing: Update Car contract if car payment is present
+      if (car > 0) {
+        const carContract = contracts.find(c => c.category === 'carro');
+        if (carContract) {
+          const updatedCar: FinancingContract = {
+            ...carContract,
+            totalBalance: Math.max(0, carContract.totalBalance - car),
+            remainingInstallments: Math.max(0, carContract.remainingInstallments - 1),
+            monthlyPayment: car,
+            notes: `Parcelas fixas mensais. Parcela de ${monthName}/${year} quitada (R$ ${car.toFixed(2)}).`
+          };
+          await updateFinancingContract(updatedCar);
+        }
+      }
+
+      // Interconnect with MRV Schedule: Mark matching installments as paid
+      if (apartment > 0) {
+        const targetDueMonth = String(monthIndex).padStart(2, '0');
+        for (const inst of mrvSchedule) {
+          if (inst.dueDate.includes(`/${targetDueMonth}/`) && inst.status !== 'pago') {
+            await updateMRVInstallment({
+              ...inst,
+              status: 'pago',
+              paidAt: `25/${targetDueMonth}/${year}`
+            });
+          }
+        }
+      }
     } catch (e) {
       console.error('Erro ao atualizar fechamento no Firestore:', e);
+    }
+  };
+
+  const handleAddTransaction = async (tx: InvestmentTransaction) => {
+    try {
+      await addB3Transaction(tx);
+
+      // Recalculate consolidated asset position
+      const tickerUpper = tx.ticker.toUpperCase();
+      const allTxForTicker = [...b3Transactions.filter(t => t.id !== tx.id), tx].filter(
+        t => t.ticker.toUpperCase() === tickerUpper
+      );
+
+      const totalBoughtQty = allTxForTicker
+        .filter(t => t.type === 'compra')
+        .reduce((acc, t) => acc + t.quantity, 0);
+
+      const totalSoldQty = allTxForTicker
+        .filter(t => t.type === 'venda')
+        .reduce((acc, t) => acc + t.quantity, 0);
+
+      const netQuantity = Math.max(0, totalBoughtQty - totalSoldQty);
+
+      const totalInvestedInBuys = allTxForTicker
+        .filter(t => t.type === 'compra')
+        .reduce((acc, t) => acc + t.totalValue, 0);
+
+      const newAveragePrice = totalBoughtQty > 0 ? totalInvestedInBuys / totalBoughtQty : tx.price;
+
+      const existingAsset = b3Assets.find(a => a.ticker.toUpperCase() === tickerUpper);
+
+      const updatedAsset: B3Asset = existingAsset
+        ? {
+            ...existingAsset,
+            quantity: netQuantity,
+            averagePrice: Number(newAveragePrice.toFixed(3)),
+            updatedAt: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+          }
+        : {
+            ticker: tickerUpper,
+            name: tickerUpper,
+            type: tickerUpper.endsWith('11') ? 'fii' : 'acao',
+            segment: 'Mercado Nacional',
+            quantity: netQuantity,
+            averagePrice: Number(newAveragePrice.toFixed(3)),
+            currentPrice: tx.price,
+            monthlyDividendPerShare: 0,
+            dividendYieldYearly: 0,
+            updatedAt: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+          };
+
+      await updateB3Asset(updatedAsset);
+    } catch (err) {
+      console.error('Erro ao adicionar transação e recalcular ativo:', err);
+    }
+  };
+
+  const handleDeleteTransaction = async (id: string) => {
+    try {
+      const txToDelete = b3Transactions.find(t => t.id === id);
+      await deleteB3Transaction(id);
+
+      if (txToDelete) {
+        const tickerUpper = txToDelete.ticker.toUpperCase();
+        const remainingTx = b3Transactions.filter(t => t.id !== id && t.ticker.toUpperCase() === tickerUpper);
+
+        const totalBoughtQty = remainingTx
+          .filter(t => t.type === 'compra')
+          .reduce((acc, t) => acc + t.quantity, 0);
+
+        const totalSoldQty = remainingTx
+          .filter(t => t.type === 'venda')
+          .reduce((acc, t) => acc + t.quantity, 0);
+
+        const netQuantity = Math.max(0, totalBoughtQty - totalSoldQty);
+
+        const totalInvestedInBuys = remainingTx
+          .filter(t => t.type === 'compra')
+          .reduce((acc, t) => acc + t.totalValue, 0);
+
+        const newAveragePrice = totalBoughtQty > 0 ? totalInvestedInBuys / totalBoughtQty : 0;
+
+        const existingAsset = b3Assets.find(a => a.ticker.toUpperCase() === tickerUpper);
+        if (existingAsset) {
+          await updateB3Asset({
+            ...existingAsset,
+            quantity: netQuantity,
+            averagePrice: Number(newAveragePrice.toFixed(3)),
+            updatedAt: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao remover transação e recalcular ativo:', err);
     }
   };
 
@@ -259,8 +504,10 @@ export function App() {
   }
 
   // KPIs calculation for authenticated view
-  const kpis = calculateKPIs(records);
-  const currentRecord = records.find(r => r.id === '2026-09') || records[records.length - 1];
+  const kpis = calculateKPIs(records, b3Assets);
+  const currentRecord = records.find(r => r.id === selectedMonthId) || 
+                        records.find(r => r.status === 'current') || 
+                        records[records.length - 1];
 
   return (
     <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col selection:bg-emerald-500/30 selection:text-emerald-300">
@@ -289,7 +536,7 @@ export function App() {
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-8">
         {activeTab === 'overview' && (
           <div className="space-y-8 animate-in fade-in duration-300">
-            <OverviewCards kpis={kpis} currentRecord={currentRecord} />
+            <OverviewCards kpis={kpis} />
             <FinancialCharts records={records} />
           </div>
         )}
@@ -317,7 +564,12 @@ export function App() {
 
         {activeTab === 'investments' && (
           <div className="animate-in fade-in duration-300">
-            <InvestmentsSection assets={b3Assets} />
+            <InvestmentsSection 
+              assets={b3Assets} 
+              transactions={b3Transactions}
+              onAddTransaction={handleAddTransaction}
+              onDeleteTransaction={handleDeleteTransaction}
+            />
           </div>
         )}
 
@@ -332,6 +584,9 @@ export function App() {
       <MonthlyClosingModal
         isOpen={isClosingModalOpen}
         onClose={() => setIsClosingModalOpen(false)}
+        selectedMonthId={selectedMonthId}
+        selectedMonthLabel={currentRecord ? `${currentRecord.month}/${currentRecord.year}` : selectedMonthId}
+        currentRecord={currentRecord}
         onConfirmClosing={handleConfirmClosing}
       />
 

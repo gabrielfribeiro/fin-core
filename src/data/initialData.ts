@@ -1,4 +1,4 @@
-import type { MonthlyRecord, FinancingContract, MRVInstallment, B3Asset, CreditCardPurchase } from '../types/finance';
+import type { MonthlyRecord, FinancingContract, MRVInstallment, B3Asset, CreditCardPurchase, InvestmentTransaction } from '../types/finance';
 
 export const INITIAL_MONTHLY_RECORDS: MonthlyRecord[] = [
   {
@@ -524,32 +524,32 @@ export const INITIAL_MONTHLY_RECORDS: MonthlyRecord[] = [
     "exchangeRate": 0,
     "netWorth": 3536.23,
     "notes": "Fatura Itaú Black fechada em R$ 4.177,82 (Venc. 28/09/2026)",
-    "status": "current"
+    "status": "completed"
   },
   {
     "id": "2026-10",
     "year": 2026,
     "month": "Outubro",
     "monthIndex": 10,
-    "salary": 0,
-    "extraIncome": 0,
-    "totalIncome": 0,
-    "car": 0,
-    "apartment": 0,
-    "itau": 0,
-    "nubank": 0,
+    "salary": 9744.19,
+    "extraIncome": 9544.73,
+    "totalIncome": 19288.92,
+    "car": 2562.95,
+    "apartment": 3181.43,
+    "itau": 4177.82,
+    "nubank": 392.16,
     "fuel": 0,
     "looseBills": 0,
-    "totalExpenses": 0,
-    "monthlyBalance": 0,
-    "savingsItau": 0,
-    "avenue": 0,
-    "liquidAccount": 0,
+    "totalExpenses": 10314.36,
+    "monthlyBalance": 8974.56,
+    "savingsItau": 7144.72,
+    "avenue": 4596.45,
+    "liquidAccount": 602.16,
     "dollarAmount": 0,
-    "exchangeRate": 0,
-    "netWorth": 0,
-    "notes": "",
-    "status": "projected"
+    "exchangeRate": 1,
+    "netWorth": 12343.33,
+    "notes": "Fechamento 25/09 (Out/2026). Reserva Itaú R$ 7.144,72 | FIIs Nubank R$ 4.596,45 | Saldo em conta R$ 602,16.",
+    "status": "current"
   },
   {
     "id": "2026-11",
@@ -1283,32 +1283,32 @@ export const INITIAL_FINANCING_CONTRACTS: FinancingContract[] = [
     id: 'carro',
     name: 'Financiamento do Veículo',
     institution: 'Banco Financiador',
-    totalBalance: 115673.40,
-    monthlyPayment: 2570.52,
-    remainingInstallments: 45,
+    totalBalance: 113110.45,
+    monthlyPayment: 2562.95,
+    remainingInstallments: 44,
     category: 'carro',
-    notes: 'Parcelas fixas mensais de R$ 2.570,52 com 45 meses restantes.'
+    notes: 'Parcelas fixas mensais de R$ 2.562,95 com 44 meses restantes. Parcela do ciclo paga em 25/09.'
   },
   {
     id: 'ap_caixa',
     name: 'Financiamento Habitacional (Juros de Obra)',
     institution: 'CAIXA Econômica Federal',
     totalBalance: 221251.81,
-    monthlyPayment: 0.00,
+    monthlyPayment: 2113.43,
     remainingInstallments: 0,
     interestRate: '0,72% a.m.',
     category: 'apartamento_caixa',
-    notes: 'Fase de evolução de obras. Parcela de amortização inicia após a entrega das chaves em 2027.'
+    notes: 'Fase de evolução de obra. Juro de obra pago em 25/09: R$ 2.113,43. Amortização do saldo principal inicia após entrega das chaves.'
   },
   {
     id: 'ap_mrv',
     name: 'Entrada Parcelada & Taxas ITBI',
     institution: 'MRV Engenharia',
-    totalBalance: 4741.96,
-    monthlyPayment: 1063.42,
-    remainingInstallments: 1,
+    totalBalance: 3673.96,
+    monthlyPayment: 1052.89,
+    remainingInstallments: 6,
     category: 'apartamento_mrv',
-    notes: 'Total certo restante: R$ 4.741,96 (quitação em Mar/2027). Parcela condicional de adimplência em Abr/2027: R$ 8.450,00.'
+    notes: 'Total certo restante: R$ 3.673,96 (quitação em Mar/2027). Boletos de Out/26 (R$ 1.068,00) quitados em 25/09.'
   }
 ];
 
@@ -1316,10 +1316,12 @@ export const INITIAL_MRV_INSTALLMENTS: MRVInstallment[] = [
   {
     code: 'M017',
     dueDate: '08/10/2026',
-    value: 692.48,
+    value: 697.06,
     classification: 'Certo',
     description: 'Entrada mensal',
-    notes: 'Parcela de entrada contratual'
+    notes: 'Quitado em 25/09/2026 (R$ 697,06)',
+    status: 'pago',
+    paidAt: '25/09/2026'
   },
   {
     code: 'RI18',
@@ -1327,7 +1329,9 @@ export const INITIAL_MRV_INSTALLMENTS: MRVInstallment[] = [
     value: 370.94,
     classification: 'Certo',
     description: 'Taxa ITBI',
-    notes: 'Parcelamento do imposto municipal de transmissão'
+    notes: 'Quitado em 25/09/2026 (R$ 370,94)',
+    status: 'pago',
+    paidAt: '25/09/2026'
   },
   {
     code: 'M018',
@@ -1389,59 +1393,205 @@ export const INITIAL_MRV_INSTALLMENTS: MRVInstallment[] = [
 
 export const INITIAL_B3_ASSETS: B3Asset[] = [
   {
-    ticker: 'MXRF11',
-    name: 'Maxi Renda FII',
-    type: 'fii',
-    segment: 'Papel / Recebíveis',
-    quantity: 0,
-    averagePrice: 10.15,
-    currentPrice: 10.20,
-    monthlyDividendPerShare: 0.10,
-    dividendYieldYearly: 11.8
-  },
-  {
-    ticker: 'XPML11',
-    name: 'XP Malls FII',
-    type: 'fii',
-    segment: 'Shoppings',
-    quantity: 0,
-    averagePrice: 106.50,
-    currentPrice: 107.20,
-    monthlyDividendPerShare: 0.92,
-    dividendYieldYearly: 9.3
-  },
-  {
     ticker: 'HGLG11',
     name: 'CSHG Logística FII',
     type: 'fii',
     segment: 'Galpões Logísticos',
-    quantity: 0,
-    averagePrice: 161.00,
-    currentPrice: 162.50,
+    quantity: 4,
+    averagePrice: 148.04,
+    currentPrice: 148.04,
     monthlyDividendPerShare: 1.10,
-    dividendYieldYearly: 8.8
-  },
-  {
-    ticker: 'BBAS3',
-    name: 'Banco do Brasil S.A.',
-    type: 'acao',
-    segment: 'Setor Bancário',
-    quantity: 0,
-    averagePrice: 27.50,
-    currentPrice: 28.10,
-    monthlyDividendPerShare: 0.22,
-    dividendYieldYearly: 10.2
-  },
-  {
-    ticker: 'ITSA4',
-    name: 'Itaúsa Holding',
-    type: 'acao',
-    segment: 'Holding Financeira',
-    quantity: 0,
-    averagePrice: 10.40,
-    currentPrice: 10.60,
-    monthlyDividendPerShare: 0.08,
     dividendYieldYearly: 8.9
+  },
+  {
+    ticker: 'KNCR11',
+    name: 'Kinea Rendimentos Imobiliários FII',
+    type: 'fii',
+    segment: 'Papel / CDI',
+    quantity: 4,
+    averagePrice: 106.385,
+    currentPrice: 106.39,
+    monthlyDividendPerShare: 1.05,
+    dividendYieldYearly: 11.8
+  },
+  {
+    ticker: 'HSML11',
+    name: 'HSI Malls FII',
+    type: 'fii',
+    segment: 'Shoppings',
+    quantity: 6,
+    averagePrice: 82.918,
+    currentPrice: 82.92,
+    monthlyDividendPerShare: 0.76,
+    dividendYieldYearly: 11.0
+  },
+  {
+    ticker: 'VISC11',
+    name: 'Vinci Shopping Centers FII',
+    type: 'fii',
+    segment: 'Shoppings',
+    quantity: 5,
+    averagePrice: 102.864,
+    currentPrice: 102.86,
+    monthlyDividendPerShare: 0.82,
+    dividendYieldYearly: 9.6
+  },
+  {
+    ticker: 'BTLG11',
+    name: 'BTG Pactual Logística FII',
+    type: 'fii',
+    segment: 'Galpões Logísticos',
+    quantity: 5,
+    averagePrice: 99.244,
+    currentPrice: 99.24,
+    monthlyDividendPerShare: 0.78,
+    dividendYieldYearly: 9.4
+  },
+  {
+    ticker: 'RECR11',
+    name: 'REC Renda Imobiliária FII',
+    type: 'fii',
+    segment: 'Papel / CRIs',
+    quantity: 7,
+    averagePrice: 73.644,
+    currentPrice: 73.64,
+    monthlyDividendPerShare: 0.78,
+    dividendYieldYearly: 12.7
+  },
+  {
+    ticker: 'RZTR11',
+    name: 'Riza Terrax FII',
+    type: 'fii',
+    segment: 'Agronegócio / Terras',
+    quantity: 6,
+    averagePrice: 83.638,
+    currentPrice: 83.64,
+    monthlyDividendPerShare: 0.85,
+    dividendYieldYearly: 12.2
+  },
+  {
+    ticker: 'GGRC11',
+    name: 'GGR Covepi Renda FII',
+    type: 'fii',
+    segment: 'Logística / Industrial',
+    quantity: 50,
+    averagePrice: 8.943,
+    currentPrice: 8.94,
+    monthlyDividendPerShare: 0.09,
+    dividendYieldYearly: 12.1
+  },
+  {
+    ticker: 'MXRF11',
+    name: 'Maxi Renda FII',
+    type: 'fii',
+    segment: 'Papel / Híbrido',
+    quantity: 67,
+    averagePrice: 9.073,
+    currentPrice: 9.07,
+    monthlyDividendPerShare: 0.09,
+    dividendYieldYearly: 11.9
+  }
+];
+
+export const INITIAL_B3_TRANSACTIONS: InvestmentTransaction[] = [
+  {
+    id: 'tx_20260925_hglg11',
+    ticker: 'HGLG11',
+    date: '2026-09-25',
+    type: 'compra',
+    quantity: 4,
+    price: 148.04,
+    totalValue: 592.16,
+    broker: 'Nubank',
+    notes: 'Aporte de 4 cotas a R$ 148,04'
+  },
+  {
+    id: 'tx_20260925_kncr11',
+    ticker: 'KNCR11',
+    date: '2026-09-25',
+    type: 'compra',
+    quantity: 4,
+    price: 106.385,
+    totalValue: 425.54,
+    broker: 'Nubank',
+    notes: 'Aporte de 4 cotas a R$ 106,385'
+  },
+  {
+    id: 'tx_20260925_hsml11',
+    ticker: 'HSML11',
+    date: '2026-09-25',
+    type: 'compra',
+    quantity: 6,
+    price: 82.918,
+    totalValue: 497.51,
+    broker: 'Nubank',
+    notes: 'Aporte de 6 cotas a R$ 82,918'
+  },
+  {
+    id: 'tx_20260925_visc11',
+    ticker: 'VISC11',
+    date: '2026-09-25',
+    type: 'compra',
+    quantity: 5,
+    price: 102.864,
+    totalValue: 514.32,
+    broker: 'Nubank',
+    notes: 'Aporte de 5 cotas a R$ 102,864'
+  },
+  {
+    id: 'tx_20260925_btlg11',
+    ticker: 'BTLG11',
+    date: '2026-09-25',
+    type: 'compra',
+    quantity: 5,
+    price: 99.244,
+    totalValue: 496.22,
+    broker: 'Nubank',
+    notes: 'Aporte de 5 cotas a R$ 99,244'
+  },
+  {
+    id: 'tx_20260925_recr11',
+    ticker: 'RECR11',
+    date: '2026-09-25',
+    type: 'compra',
+    quantity: 7,
+    price: 73.644,
+    totalValue: 515.51,
+    broker: 'Nubank',
+    notes: 'Aporte de 7 cotas a R$ 73,644'
+  },
+  {
+    id: 'tx_20260925_rztr11',
+    ticker: 'RZTR11',
+    date: '2026-09-25',
+    type: 'compra',
+    quantity: 6,
+    price: 83.638,
+    totalValue: 501.83,
+    broker: 'Nubank',
+    notes: 'Aporte de 6 cotas a R$ 83,638'
+  },
+  {
+    id: 'tx_20260925_ggrc11',
+    ticker: 'GGRC11',
+    date: '2026-09-25',
+    type: 'compra',
+    quantity: 50,
+    price: 8.943,
+    totalValue: 447.15,
+    broker: 'Nubank',
+    notes: 'Aporte de 50 cotas a R$ 8,943'
+  },
+  {
+    id: 'tx_20260925_mxrf11',
+    ticker: 'MXRF11',
+    date: '2026-09-25',
+    type: 'compra',
+    quantity: 67,
+    price: 9.073,
+    totalValue: 607.90,
+    broker: 'Nubank',
+    notes: 'Aporte de 67 cotas a R$ 9,073'
   }
 ];
 

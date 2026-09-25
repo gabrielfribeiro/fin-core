@@ -1,4 +1,4 @@
-import type { MonthlyRecord, KPIStats } from '../types/finance';
+import type { MonthlyRecord, KPIStats, B3Asset } from '../types/finance';
 
 export const formatCurrency = (value: number | undefined | null): string => {
   if (value === undefined || value === null || isNaN(value)) return 'R$ 0,00';
@@ -15,10 +15,9 @@ export const formatPercent = (value: number | undefined | null): string => {
   return `${value.toFixed(1)}%`;
 };
 
-export const calculateKPIs = (records: MonthlyRecord[]): KPIStats => {
-  // Find current active month (2026-09 or the latest month with salary > 0)
-  const activeRecords = records.filter(r => r.totalIncome > 0 || r.totalExpenses > 0);
-  const current = records.find(r => r.id === '2026-09') || activeRecords[activeRecords.length - 1] || records[0];
+export const calculateKPIs = (records: MonthlyRecord[], assets?: B3Asset[]): KPIStats => {
+  const activeRecords = records.filter(r => r.totalIncome > 0 || r.totalExpenses > 0 || r.netWorth > 0 || r.savingsItau > 0);
+  const current = records.find(r => r.status === 'current') || activeRecords[activeRecords.length - 1] || records[0];
 
   // 2026 stats
   const records2026 = records.filter(r => r.year === 2026 && (r.totalIncome > 0 || r.totalExpenses > 0));
@@ -32,7 +31,10 @@ export const calculateKPIs = (records: MonthlyRecord[]): KPIStats => {
 
   const savingsItau = current?.savingsItau || 0;
   const liquidAccount = current?.liquidAccount || 0;
-  const investmentsB3 = 0; // Início da carteira de Ações e FIIs
+  const assetsInvestedTotal = assets && assets.length > 0
+    ? assets.reduce((acc, a) => acc + (a.quantity * (a.averagePrice || a.currentPrice)), 0)
+    : 0;
+  const investmentsB3 = (current?.avenue && current.avenue > 0) ? current.avenue : assetsInvestedTotal;
 
   const totalNetWorth = current?.netWorth > 0
     ? current.netWorth
@@ -65,4 +67,22 @@ export const calculateKPIs = (records: MonthlyRecord[]): KPIStats => {
     goal2027Current,
     goal2027Percent,
   };
+};
+
+export const getNextMonthInfo = (monthId: string = '2026-09') => {
+  const [yearStr, monthStr] = (monthId || '2026-09').split('-');
+  let year = parseInt(yearStr, 10) || 2026;
+  let month = parseInt(monthStr, 10) || 9;
+  month += 1;
+  if (month > 12) {
+    month = 1;
+    year += 1;
+  }
+  const nextMonthId = `${year}-${String(month).padStart(2, '0')}`;
+  const MONTH_NAMES = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ];
+  const nextMonthLabel = `${MONTH_NAMES[month - 1]}/${year}`;
+  return { nextMonthId, nextMonthLabel, year, monthName: MONTH_NAMES[month - 1], monthIndex: month };
 };

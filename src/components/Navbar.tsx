@@ -116,7 +116,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
 
           {/* User Auth Section & Closing Button */}
-          <div className="flex items-center space-x-3 shrink-0">
+          <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
             {/* Fechamento Dia 25 Button */}
             {user && (
               <button
