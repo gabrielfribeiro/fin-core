@@ -342,40 +342,34 @@ export const cleanObsoleteB3Assets = async (activeTickers: string[]) => {
   }
 };
 
-// Reset a month in Firestore to clean projected state (eliminating duplicates)
-export const resetMonthToProjected = async (
-  monthId: string,
-  year: number,
-  monthName: string,
-  monthIndex: number
-) => {
+export const updateFinancingContract = async (contract: FinancingContract) => {
   if (db && isFirebaseConfigured) {
-    const docRef = doc(db, 'monthly_records', monthId);
-    const cleanRecord: MonthlyRecord = {
-      id: monthId,
-      year,
-      month: monthName,
-      monthIndex,
-      salary: 0,
-      extraIncome: 0,
-      totalIncome: 0,
-      car: 0,
-      apartment: 0,
-      itau: 0,
-      nubank: 0,
-      fuel: 0,
-      looseBills: 0,
-      totalExpenses: 0,
-      monthlyBalance: 0,
-      savingsItau: 0,
-      avenue: 0,
-      liquidAccount: 0,
-      dollarAmount: 0,
-      exchangeRate: 0,
-      netWorth: 0,
-      notes: '',
-      status: 'projected'
-    };
-    await setDoc(docRef, cleanRecord);
+    const docRef = doc(db, 'financing_contracts', contract.id);
+    await setDoc(docRef, contract, { merge: true });
+  }
+};
+
+export const updateMRVInstallment = async (installment: MRVInstallment) => {
+  if (db && isFirebaseConfigured) {
+    const docRef = doc(db, 'mrv_installments', installment.code);
+    await setDoc(docRef, installment, { merge: true });
+  }
+};
+
+export const syncFinancingContractsToFirestore = async (contracts: FinancingContract[]) => {
+  if (db && isFirebaseConfigured) {
+    for (const contract of contracts) {
+      const docRef = doc(db, 'financing_contracts', contract.id);
+      await setDoc(docRef, contract, { merge: true });
+    }
+  }
+};
+
+export const syncMRVInstallmentsToFirestore = async (installments: MRVInstallment[]) => {
+  if (db && isFirebaseConfigured) {
+    for (const inst of installments) {
+      const docRef = doc(db, 'mrv_installments', inst.code);
+      await setDoc(docRef, inst, { merge: true });
+    }
   }
 };

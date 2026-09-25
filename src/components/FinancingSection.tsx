@@ -22,14 +22,22 @@ interface FinancingSectionProps {
 export const FinancingSection: React.FC<FinancingSectionProps> = ({ contracts, mrvSchedule }) => {
   const [filterClass, setFilterClass] = useState<'all' | 'Certo' | 'Condicional'>('all');
 
+  const carContract = contracts.find(c => c.category === 'carro') || contracts[0];
+  const caixaContract = contracts.find(c => c.category === 'apartamento_caixa') || contracts[1];
+  const mrvContract = contracts.find(c => c.category === 'apartamento_mrv') || contracts[2];
+
   const totalDebt = contracts.reduce((acc, c) => acc + c.totalBalance, 0);
   const totalMonthlyCommitment = contracts.reduce((acc, c) => acc + c.monthlyPayment, 0);
-  const mrvCertainTotal = mrvSchedule
-    .filter(i => i.classification === 'Certo')
-    .reduce((acc, i) => acc + i.value, 0);
+
+  // Certain installments that are still pending
+  const pendingCertainInstallments = mrvSchedule.filter(i => i.classification === 'Certo' && i.status !== 'pago');
+  const mrvCertainTotal = pendingCertainInstallments.reduce((acc, i) => acc + i.value, 0);
   const mrvConditionalTotal = mrvSchedule
     .filter(i => i.classification === 'Condicional')
     .reduce((acc, i) => acc + i.value, 0);
+
+  // Next pending installment
+  const nextPendingInstallment = pendingCertainInstallments[0];
 
   const filteredSchedule = mrvSchedule.filter(item => {
     if (filterClass === 'all') return true;
@@ -56,11 +64,11 @@ export const FinancingSection: React.FC<FinancingSectionProps> = ({ contracts, m
         <div className="flex flex-wrap gap-4 w-full md:w-auto">
           <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-4 min-w-[170px] text-right">
             <span className="text-[11px] uppercase tracking-wider text-slate-400 block">Saldo Devedor Total</span>
-            <span className="text-xl font-bold text-rose-400">{formatCurrency(totalDebt)}</span>
+            <span className="text-xl font-bold text-rose-400 font-mono">{formatCurrency(totalDebt)}</span>
           </div>
           <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-4 min-w-[170px] text-right">
-            <span className="text-[11px] uppercase tracking-wider text-slate-400 block">Parcelas Fixas Atuais</span>
-            <span className="text-xl font-bold text-amber-300">{formatCurrency(totalMonthlyCommitment)}/mês</span>
+            <span className="text-[11px] uppercase tracking-wider text-slate-400 block">Compromisso Mensal Atual</span>
+            <span className="text-xl font-bold text-amber-300 font-mono">{formatCurrency(totalMonthlyCommitment)}/mês</span>
           </div>
         </div>
       </div>
@@ -74,32 +82,34 @@ export const FinancingSection: React.FC<FinancingSectionProps> = ({ contracts, m
               <Car className="w-5 h-5" />
             </div>
             <span className="text-xs px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 font-semibold border border-blue-500/20">
-              45x Restantes
+              {carContract?.remainingInstallments || 44}x Restantes
             </span>
           </div>
 
           <div>
             <h3 className="text-base font-bold text-white">Financiamento do Carro</h3>
-            <span className="text-xs text-slate-400">Banco Financiador</span>
+            <span className="text-xs text-slate-400">{carContract?.institution || 'Banco Financiador'}</span>
           </div>
 
           <div className="space-y-2 pt-2 border-t border-slate-800 text-xs">
             <div className="flex justify-between">
               <span className="text-slate-400">Saldo Devedor:</span>
-              <strong className="text-white font-mono">{formatCurrency(115673.40)}</strong>
+              <strong className="text-white font-mono">{formatCurrency(carContract?.totalBalance)}</strong>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Valor da Parcela:</span>
-              <strong className="text-amber-300 font-mono">{formatCurrency(2570.52)}</strong>
+              <strong className="text-amber-300 font-mono">{formatCurrency(carContract?.monthlyPayment)}</strong>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Prazo Restante:</span>
-              <span className="text-slate-200 font-medium">45 meses (~3,7 anos)</span>
+              <span className="text-slate-200 font-medium">
+                {carContract?.remainingInstallments || 44} meses (~{(Number(carContract?.remainingInstallments || 44) / 12).toFixed(1)} anos)
+              </span>
             </div>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 text-[11px] text-slate-400 leading-relaxed">
-            💡 <strong>Impacto no Fluxo:</strong> Compromete ~25% da renda líquida mensal de 2026 de forma fixa.
+            💡 <strong>Status do Ciclo:</strong> Parcela do dia 25 paga com sucesso. Saldo devedor abatido.
           </div>
         </div>
 
@@ -116,28 +126,32 @@ export const FinancingSection: React.FC<FinancingSectionProps> = ({ contracts, m
 
           <div>
             <h3 className="text-base font-bold text-white">AP - Juros de Obra</h3>
-            <span className="text-xs text-slate-400">CAIXA Econômica Federal</span>
+            <span className="text-xs text-slate-400">{caixaContract?.institution || 'CAIXA Econômica Federal'}</span>
           </div>
 
           <div className="space-y-2 pt-2 border-t border-slate-800 text-xs">
             <div className="flex justify-between">
               <span className="text-slate-400">Saldo Financiado:</span>
-              <strong className="text-white font-mono">{formatCurrency(221251.81)}</strong>
+              <strong className="text-white font-mono">{formatCurrency(caixaContract?.totalBalance)}</strong>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-400">Juro de Obra do Mês:</span>
+              <strong className="text-amber-300 font-mono">{formatCurrency(caixaContract?.monthlyPayment || 2113.43)}</strong>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Taxa Contratual:</span>
               <strong className="text-emerald-400 font-mono flex items-center gap-1">
-                <BadgePercent className="w-3.5 h-3.5" /> 0,72% a.m.
+                <BadgePercent className="w-3.5 h-3.5" /> {caixaContract?.interestRate || '0,72% a.m.'}
               </strong>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Amortização Efetiva:</span>
+              <span className="text-slate-400">Amortização Principal:</span>
               <span className="text-cyan-300 font-medium">Inicia na entrega (2027)</span>
             </div>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 text-[11px] text-slate-400 leading-relaxed">
-            🏗️ <strong>Juros de Obra:</strong> Evoluem proporcionalmente à medição da construtora até a expedição do Habite-se.
+            🏗️ <strong>Juros de Obra:</strong> Quitado no fechamento do dia 25. Evolui proporcionalmente à medição da construtora.
           </div>
         </div>
 
@@ -148,13 +162,13 @@ export const FinancingSection: React.FC<FinancingSectionProps> = ({ contracts, m
               <CalendarClock className="w-5 h-5" />
             </div>
             <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20">
-              Quitação Mar/27
+              {pendingCertainInstallments.length} parcelas certas
             </span>
           </div>
 
           <div>
             <h3 className="text-base font-bold text-white">Entrada & Taxas ITBI</h3>
-            <span className="text-xs text-slate-400">MRV Engenharia</span>
+            <span className="text-xs text-slate-400">{mrvContract?.institution || 'MRV Engenharia'}</span>
           </div>
 
           <div className="space-y-2 pt-2 border-t border-slate-800 text-xs">
@@ -163,8 +177,10 @@ export const FinancingSection: React.FC<FinancingSectionProps> = ({ contracts, m
               <strong className="text-emerald-400 font-mono">{formatCurrency(mrvCertainTotal)}</strong>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Parcela de Outubro:</span>
-              <strong className="text-amber-300 font-mono">{formatCurrency(1063.42)}</strong>
+              <span className="text-slate-400">Próximo Vencimento:</span>
+              <strong className="text-amber-300 font-mono">
+                {nextPendingInstallment ? `${nextPendingInstallment.dueDate} (${formatCurrency(nextPendingInstallment.value)})` : 'Quitado'}
+              </strong>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Desconto Adimplência:</span>
@@ -173,7 +189,7 @@ export const FinancingSection: React.FC<FinancingSectionProps> = ({ contracts, m
           </div>
 
           <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/80 text-[11px] text-slate-400 leading-relaxed">
-            🎯 <strong>Alívio de Caixa Próximo:</strong> Em Março/2027 a entrada é 100% quitada, liberando mais de R$ 1.000/mês!
+            🎯 <strong>Boletos Quitados:</strong> As parcelas de Outubro (R$ 697,06 + R$ 370,94) foram quitadas! Restam {pendingCertainInstallments.length} parcelas certas até Mar/27.
           </div>
         </div>
       </div>
@@ -242,7 +258,7 @@ export const FinancingSection: React.FC<FinancingSectionProps> = ({ contracts, m
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              Certas (R$ 4.741,96)
+              Certas Restantes ({formatCurrency(mrvCertainTotal)})
             </button>
             <button
               onClick={() => setFilterClass('Condicional')}
@@ -252,7 +268,7 @@ export const FinancingSection: React.FC<FinancingSectionProps> = ({ contracts, m
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              Condicional (R$ 8.450)
+              Condicional ({formatCurrency(mrvConditionalTotal)})
             </button>
           </div>
         </div>
@@ -265,6 +281,7 @@ export const FinancingSection: React.FC<FinancingSectionProps> = ({ contracts, m
                 <th className="py-3 px-4">Vencimento</th>
                 <th className="py-3 px-4">Tipo / Descrição</th>
                 <th className="py-3 px-4 text-right">Valor</th>
+                <th className="py-3 px-4 text-center">Status</th>
                 <th className="py-3 px-4 text-center">Classificação</th>
                 <th className="py-3 px-4">Observações</th>
               </tr>
@@ -272,22 +289,28 @@ export const FinancingSection: React.FC<FinancingSectionProps> = ({ contracts, m
             <tbody className="divide-y divide-slate-800/60">
               {filteredSchedule.map((item, idx) => {
                 const isCertain = item.classification === 'Certo';
-                const isNext = item.dueDate === '08/10/2026';
+                const isPaid = item.status === 'pago';
+                const isNext = !isPaid && item.code === nextPendingInstallment?.code;
 
                 return (
                   <tr
                     key={idx}
                     className={`hover:bg-slate-800/40 transition ${
-                      isNext ? 'bg-emerald-500/5' : ''
+                      isNext ? 'bg-amber-500/5' : isPaid ? 'bg-slate-950/40 opacity-75' : ''
                     }`}
                   >
                     {/* Código */}
                     <td className="py-3.5 px-4 font-mono font-bold text-white whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <span>{item.code}</span>
+                        <span className={isPaid ? 'line-through text-slate-500' : ''}>{item.code}</span>
                         {isNext && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
                             Próxima
+                          </span>
+                        )}
+                        {isPaid && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">
+                            Quitado
                           </span>
                         )}
                       </div>
@@ -295,26 +318,39 @@ export const FinancingSection: React.FC<FinancingSectionProps> = ({ contracts, m
 
                     {/* Vencimento */}
                     <td className="py-3.5 px-4 whitespace-nowrap font-medium text-slate-200">
-                      {item.dueDate}
+                      <span className={isPaid ? 'text-slate-500' : ''}>{item.dueDate}</span>
                     </td>
 
                     {/* Descrição */}
                     <td className="py-3.5 px-4 whitespace-nowrap text-slate-300">
-                      {item.description}
+                      <span className={isPaid ? 'text-slate-500' : ''}>{item.description}</span>
                     </td>
 
                     {/* Valor */}
                     <td className="py-3.5 px-4 text-right font-mono font-bold whitespace-nowrap">
-                      <span className={isCertain ? 'text-white' : 'text-amber-400'}>
+                      <span className={isPaid ? 'text-emerald-400 font-semibold' : isCertain ? 'text-white' : 'text-amber-400'}>
                         {formatCurrency(item.value)}
                       </span>
+                    </td>
+
+                    {/* Status */}
+                    <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                      {isPaid ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                          <CheckCircle2 className="w-3 h-3" /> Pago {item.paidAt ? `(${item.paidAt})` : ''}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400 bg-slate-800/80 px-2.5 py-0.5 rounded-full border border-slate-700">
+                          Pendente
+                        </span>
+                      )}
                     </td>
 
                     {/* Classificação */}
                     <td className="py-3.5 px-4 text-center whitespace-nowrap">
                       {isCertain ? (
                         <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                          <CheckCircle2 className="w-3 h-3" /> Certo
+                          Certo
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">

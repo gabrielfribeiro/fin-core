@@ -44,6 +44,8 @@ export interface MRVInstallment {
   classification: 'Certo' | 'Condicional';
   description: string;
   notes: string;
+  status?: 'pago' | 'pendente';
+  paidAt?: string;
 }
 
 export interface B3Asset {

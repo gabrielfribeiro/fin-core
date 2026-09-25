@@ -1283,32 +1283,32 @@ export const INITIAL_FINANCING_CONTRACTS: FinancingContract[] = [
     id: 'carro',
     name: 'Financiamento do Veículo',
     institution: 'Banco Financiador',
-    totalBalance: 115673.40,
-    monthlyPayment: 2570.52,
-    remainingInstallments: 45,
+    totalBalance: 113110.45,
+    monthlyPayment: 2562.95,
+    remainingInstallments: 44,
     category: 'carro',
-    notes: 'Parcelas fixas mensais de R$ 2.570,52 com 45 meses restantes.'
+    notes: 'Parcelas fixas mensais de R$ 2.562,95 com 44 meses restantes. Parcela do ciclo paga em 25/09.'
   },
   {
     id: 'ap_caixa',
     name: 'Financiamento Habitacional (Juros de Obra)',
     institution: 'CAIXA Econômica Federal',
     totalBalance: 221251.81,
-    monthlyPayment: 0.00,
+    monthlyPayment: 2113.43,
     remainingInstallments: 0,
     interestRate: '0,72% a.m.',
     category: 'apartamento_caixa',
-    notes: 'Fase de evolução de obras. Parcela de amortização inicia após a entrega das chaves em 2027.'
+    notes: 'Fase de evolução de obra. Juro de obra pago em 25/09: R$ 2.113,43. Amortização do saldo principal inicia após entrega das chaves.'
   },
   {
     id: 'ap_mrv',
     name: 'Entrada Parcelada & Taxas ITBI',
     institution: 'MRV Engenharia',
-    totalBalance: 4741.96,
-    monthlyPayment: 1063.42,
-    remainingInstallments: 1,
+    totalBalance: 3673.96,
+    monthlyPayment: 1052.89,
+    remainingInstallments: 6,
     category: 'apartamento_mrv',
-    notes: 'Total certo restante: R$ 4.741,96 (quitação em Mar/2027). Parcela condicional de adimplência em Abr/2027: R$ 8.450,00.'
+    notes: 'Total certo restante: R$ 3.673,96 (quitação em Mar/2027). Boletos de Out/26 (R$ 1.068,00) quitados em 25/09.'
   }
 ];
 
@@ -1316,10 +1316,12 @@ export const INITIAL_MRV_INSTALLMENTS: MRVInstallment[] = [
   {
     code: 'M017',
     dueDate: '08/10/2026',
-    value: 692.48,
+    value: 697.06,
     classification: 'Certo',
     description: 'Entrada mensal',
-    notes: 'Parcela de entrada contratual'
+    notes: 'Quitado em 25/09/2026 (R$ 697,06)',
+    status: 'pago',
+    paidAt: '25/09/2026'
   },
   {
     code: 'RI18',
@@ -1327,7 +1329,9 @@ export const INITIAL_MRV_INSTALLMENTS: MRVInstallment[] = [
     value: 370.94,
     classification: 'Certo',
     description: 'Taxa ITBI',
-    notes: 'Parcelamento do imposto municipal de transmissão'
+    notes: 'Quitado em 25/09/2026 (R$ 370,94)',
+    status: 'pago',
+    paidAt: '25/09/2026'
   },
   {
     code: 'M018',

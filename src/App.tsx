@@ -13,7 +13,11 @@ import {
   isUserAuthorized,
   updateMonthlyRecord,
   syncB3AssetsToFirestore,
-  cleanObsoleteB3Assets
+  cleanObsoleteB3Assets,
+  updateFinancingContract,
+  updateMRVInstallment,
+  syncFinancingContractsToFirestore,
+  syncMRVInstallmentsToFirestore
 } from './services/firebase';
 import type { 
   MonthlyRecord, 
@@ -229,8 +233,20 @@ export function App() {
         syncB3AssetsToFirestore(INITIAL_B3_ASSETS);
         cleanObsoleteB3Assets(INITIAL_B3_ASSETS.map(a => a.ticker));
       }
+
+      // Sync Financing Contracts if carro still has 45 installments or old balance
+      const carContract = contracts.find(c => c.category === 'carro');
+      if (carContract && (carContract.remainingInstallments > 44 || carContract.totalBalance > 113110.45)) {
+        syncFinancingContractsToFirestore(INITIAL_FINANCING_CONTRACTS);
+      }
+
+      // Sync MRV Installments if M017 is not marked as pago
+      const m17 = mrvSchedule.find(i => i.code === 'M017');
+      if (m17 && m17.status !== 'pago') {
+        syncMRVInstallmentsToFirestore(INITIAL_MRV_INSTALLMENTS);
+      }
     }
-  }, [user, records, b3Assets]);
+  }, [user, records, b3Assets, contracts, mrvSchedule]);
 
   const handleConfirmClosing = async (
     monthId: string,
@@ -292,6 +308,35 @@ export function App() {
     try {
       await updateMonthlyRecord(updatedRecord);
       setSelectedMonthId(monthId);
+
+      // Interconnect with Financing: Update Car contract if car payment is present
+      if (car > 0) {
+        const carContract = contracts.find(c => c.category === 'carro');
+        if (carContract) {
+          const updatedCar: FinancingContract = {
+            ...carContract,
+            totalBalance: Math.max(0, carContract.totalBalance - car),
+            remainingInstallments: Math.max(0, carContract.remainingInstallments - 1),
+            monthlyPayment: car,
+            notes: `Parcelas fixas mensais. Parcela de ${monthName}/${year} quitada (R$ ${car.toFixed(2)}).`
+          };
+          await updateFinancingContract(updatedCar);
+        }
+      }
+
+      // Interconnect with MRV Schedule: Mark matching installments as paid
+      if (apartment > 0) {
+        const targetDueMonth = String(monthIndex).padStart(2, '0');
+        for (const inst of mrvSchedule) {
+          if (inst.dueDate.includes(`/${targetDueMonth}/`) && inst.status !== 'pago') {
+            await updateMRVInstallment({
+              ...inst,
+              status: 'pago',
+              paidAt: `25/${targetDueMonth}/${year}`
+            });
+          }
+        }
+      }
     } catch (e) {
       console.error('Erro ao atualizar fechamento no Firestore:', e);
     }
