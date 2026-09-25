@@ -1,4 +1,4 @@
-import type { MonthlyRecord, FinancingContract, MRVInstallment, B3Asset, CreditCardPurchase } from '../types/finance';
+import type { MonthlyRecord, FinancingContract, MRVInstallment, B3Asset, CreditCardPurchase, InvestmentTransaction } from '../types/finance';
 
 export const INITIAL_MONTHLY_RECORDS: MonthlyRecord[] = [
   {
@@ -1490,6 +1490,108 @@ export const INITIAL_B3_ASSETS: B3Asset[] = [
     currentPrice: 9.07,
     monthlyDividendPerShare: 0.09,
     dividendYieldYearly: 11.9
+  }
+];
+
+export const INITIAL_B3_TRANSACTIONS: InvestmentTransaction[] = [
+  {
+    id: 'tx_20260925_hglg11',
+    ticker: 'HGLG11',
+    date: '2026-09-25',
+    type: 'compra',
+    quantity: 4,
+    price: 148.04,
+    totalValue: 592.16,
+    broker: 'Nubank',
+    notes: 'Aporte de 4 cotas a R$ 148,04'
+  },
+  {
+    id: 'tx_20260925_kncr11',
+    ticker: 'KNCR11',
+    date: '2026-09-25',
+    type: 'compra',
+    quantity: 4,
+    price: 106.385,
+    totalValue: 425.54,
+    broker: 'Nubank',
+    notes: 'Aporte de 4 cotas a R$ 106,385'
+  },
+  {
+    id: 'tx_20260925_hsml11',
+    ticker: 'HSML11',
+    date: '2026-09-25',
+    type: 'compra',
+    quantity: 6,
+    price: 82.918,
+    totalValue: 497.51,
+    broker: 'Nubank',
+    notes: 'Aporte de 6 cotas a R$ 82,918'
+  },
+  {
+    id: 'tx_20260925_visc11',
+    ticker: 'VISC11',
+    date: '2026-09-25',
+    type: 'compra',
+    quantity: 5,
+    price: 102.864,
+    totalValue: 514.32,
+    broker: 'Nubank',
+    notes: 'Aporte de 5 cotas a R$ 102,864'
+  },
+  {
+    id: 'tx_20260925_btlg11',
+    ticker: 'BTLG11',
+    date: '2026-09-25',
+    type: 'compra',
+    quantity: 5,
+    price: 99.244,
+    totalValue: 496.22,
+    broker: 'Nubank',
+    notes: 'Aporte de 5 cotas a R$ 99,244'
+  },
+  {
+    id: 'tx_20260925_recr11',
+    ticker: 'RECR11',
+    date: '2026-09-25',
+    type: 'compra',
+    quantity: 7,
+    price: 73.644,
+    totalValue: 515.51,
+    broker: 'Nubank',
+    notes: 'Aporte de 7 cotas a R$ 73,644'
+  },
+  {
+    id: 'tx_20260925_rztr11',
+    ticker: 'RZTR11',
+    date: '2026-09-25',
+    type: 'compra',
+    quantity: 6,
+    price: 83.638,
+    totalValue: 501.83,
+    broker: 'Nubank',
+    notes: 'Aporte de 6 cotas a R$ 83,638'
+  },
+  {
+    id: 'tx_20260925_ggrc11',
+    ticker: 'GGRC11',
+    date: '2026-09-25',
+    type: 'compra',
+    quantity: 50,
+    price: 8.943,
+    totalValue: 447.15,
+    broker: 'Nubank',
+    notes: 'Aporte de 50 cotas a R$ 8,943'
+  },
+  {
+    id: 'tx_20260925_mxrf11',
+    ticker: 'MXRF11',
+    date: '2026-09-25',
+    type: 'compra',
+    quantity: 67,
+    price: 9.073,
+    totalValue: 607.90,
+    broker: 'Nubank',
+    notes: 'Aporte de 67 cotas a R$ 9,073'
   }
 ];
 

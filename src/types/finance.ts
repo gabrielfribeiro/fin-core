@@ -64,6 +64,19 @@ export interface B3Asset {
   updatedAt?: string;
 }
 
+export interface InvestmentTransaction {
+  id: string; // Ex: "tx_20260925_hglg11"
+  date: string; // "2026-09-25"
+  ticker: string; // "HGLG11"
+  type: 'compra' | 'venda';
+  quantity: number; // 4
+  price: number; // 148.04
+  totalValue: number; // 592.16
+  broker?: string; // "Nubank"
+  notes?: string;
+  createdAt?: string;
+}
+
 export interface CreditCardPurchase {
   id: string;
   description: string;

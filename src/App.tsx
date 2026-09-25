@@ -9,6 +9,10 @@ import {
   subscribeMRVInstallments,
   subscribeCardPurchases,
   subscribeB3Assets,
+  subscribeB3Transactions,
+  addB3Transaction,
+  deleteB3Transaction,
+  updateB3Asset,
   isFirebaseConfigured,
   isUserAuthorized,
   updateMonthlyRecord,
@@ -17,14 +21,16 @@ import {
   updateFinancingContract,
   updateMRVInstallment,
   syncFinancingContractsToFirestore,
-  syncMRVInstallmentsToFirestore
+  syncMRVInstallmentsToFirestore,
+  syncB3TransactionsToFirestore
 } from './services/firebase';
 import type { 
   MonthlyRecord, 
   FinancingContract, 
   MRVInstallment, 
   CreditCardPurchase, 
-  B3Asset 
+  B3Asset,
+  InvestmentTransaction
 } from './types/finance';
 import { calculateKPIs } from './utils/formatters';
 import { Navbar } from './components/Navbar';
@@ -41,7 +47,8 @@ import {
   INITIAL_FINANCING_CONTRACTS, 
   INITIAL_MRV_INSTALLMENTS, 
   INITIAL_CARD_PURCHASES, 
-  INITIAL_B3_ASSETS 
+  INITIAL_B3_ASSETS,
+  INITIAL_B3_TRANSACTIONS
 } from './data/initialData';
 import { ShieldAlert, LogOut, Sparkles, Loader2 } from 'lucide-react';
 
@@ -56,6 +63,7 @@ export function App() {
   const [mrvSchedule, setMrvSchedule] = useState<MRVInstallment[]>(INITIAL_MRV_INSTALLMENTS);
   const [cardPurchases, setCardPurchases] = useState<CreditCardPurchase[]>(INITIAL_CARD_PURCHASES);
   const [b3Assets, setB3Assets] = useState<B3Asset[]>(INITIAL_B3_ASSETS);
+  const [b3Transactions, setB3Transactions] = useState<InvestmentTransaction[]>(INITIAL_B3_TRANSACTIONS);
 
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState<boolean>(true);
@@ -93,6 +101,7 @@ export function App() {
       setMrvSchedule([]);
       setCardPurchases([]);
       setB3Assets([]);
+      setB3Transactions([]);
       return;
     }
 
@@ -116,12 +125,17 @@ export function App() {
       setB3Assets(data);
     });
 
+    const unsubTransactions = subscribeB3Transactions((data) => {
+      setB3Transactions(data);
+    });
+
     return () => {
       unsubRecords();
       unsubContracts();
       unsubMRV();
       unsubCard();
       unsubB3();
+      unsubTransactions();
     };
   }, [user]);
 
@@ -159,6 +173,7 @@ export function App() {
     setMrvSchedule([]);
     setCardPurchases([]);
     setB3Assets([]);
+    setB3Transactions([]);
   };
 
   // Ensure September is preserved with original spreadsheet values and marked completed
@@ -245,8 +260,14 @@ export function App() {
       if (m17 && m17.status !== 'pago') {
         syncMRVInstallmentsToFirestore(INITIAL_MRV_INSTALLMENTS);
       }
+
+      // Sync B3 Transactions if empty
+      const hasRealTransactions = b3Transactions.some(t => t.ticker === 'MXRF11' && t.quantity === 67);
+      if (!hasRealTransactions) {
+        syncB3TransactionsToFirestore(INITIAL_B3_TRANSACTIONS);
+      }
     }
-  }, [user, records, b3Assets, contracts, mrvSchedule]);
+  }, [user, records, b3Assets, b3Transactions, contracts, mrvSchedule]);
 
   const handleConfirmClosing = async (
     monthId: string,
@@ -339,6 +360,100 @@ export function App() {
       }
     } catch (e) {
       console.error('Erro ao atualizar fechamento no Firestore:', e);
+    }
+  };
+
+  const handleAddTransaction = async (tx: InvestmentTransaction) => {
+    try {
+      await addB3Transaction(tx);
+
+      // Recalculate consolidated asset position
+      const tickerUpper = tx.ticker.toUpperCase();
+      const allTxForTicker = [...b3Transactions.filter(t => t.id !== tx.id), tx].filter(
+        t => t.ticker.toUpperCase() === tickerUpper
+      );
+
+      const totalBoughtQty = allTxForTicker
+        .filter(t => t.type === 'compra')
+        .reduce((acc, t) => acc + t.quantity, 0);
+
+      const totalSoldQty = allTxForTicker
+        .filter(t => t.type === 'venda')
+        .reduce((acc, t) => acc + t.quantity, 0);
+
+      const netQuantity = Math.max(0, totalBoughtQty - totalSoldQty);
+
+      const totalInvestedInBuys = allTxForTicker
+        .filter(t => t.type === 'compra')
+        .reduce((acc, t) => acc + t.totalValue, 0);
+
+      const newAveragePrice = totalBoughtQty > 0 ? totalInvestedInBuys / totalBoughtQty : tx.price;
+
+      const existingAsset = b3Assets.find(a => a.ticker.toUpperCase() === tickerUpper);
+
+      const updatedAsset: B3Asset = existingAsset
+        ? {
+            ...existingAsset,
+            quantity: netQuantity,
+            averagePrice: Number(newAveragePrice.toFixed(3)),
+            updatedAt: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+          }
+        : {
+            ticker: tickerUpper,
+            name: tickerUpper,
+            type: tickerUpper.endsWith('11') ? 'fii' : 'acao',
+            segment: 'Mercado Nacional',
+            quantity: netQuantity,
+            averagePrice: Number(newAveragePrice.toFixed(3)),
+            currentPrice: tx.price,
+            monthlyDividendPerShare: 0,
+            dividendYieldYearly: 0,
+            updatedAt: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+          };
+
+      await updateB3Asset(updatedAsset);
+    } catch (err) {
+      console.error('Erro ao adicionar transação e recalcular ativo:', err);
+    }
+  };
+
+  const handleDeleteTransaction = async (id: string) => {
+    try {
+      const txToDelete = b3Transactions.find(t => t.id === id);
+      await deleteB3Transaction(id);
+
+      if (txToDelete) {
+        const tickerUpper = txToDelete.ticker.toUpperCase();
+        const remainingTx = b3Transactions.filter(t => t.id !== id && t.ticker.toUpperCase() === tickerUpper);
+
+        const totalBoughtQty = remainingTx
+          .filter(t => t.type === 'compra')
+          .reduce((acc, t) => acc + t.quantity, 0);
+
+        const totalSoldQty = remainingTx
+          .filter(t => t.type === 'venda')
+          .reduce((acc, t) => acc + t.quantity, 0);
+
+        const netQuantity = Math.max(0, totalBoughtQty - totalSoldQty);
+
+        const totalInvestedInBuys = remainingTx
+          .filter(t => t.type === 'compra')
+          .reduce((acc, t) => acc + t.totalValue, 0);
+
+        const newAveragePrice = totalBoughtQty > 0 ? totalInvestedInBuys / totalBoughtQty : 0;
+
+        const existingAsset = b3Assets.find(a => a.ticker.toUpperCase() === tickerUpper);
+        if (existingAsset) {
+          await updateB3Asset({
+            ...existingAsset,
+            quantity: netQuantity,
+            averagePrice: Number(newAveragePrice.toFixed(3)),
+            updatedAt: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Erro ao remover transação e recalcular ativo:', err);
     }
   };
 
@@ -449,7 +564,12 @@ export function App() {
 
         {activeTab === 'investments' && (
           <div className="animate-in fade-in duration-300">
-            <InvestmentsSection assets={b3Assets} />
+            <InvestmentsSection 
+              assets={b3Assets} 
+              transactions={b3Transactions}
+              onAddTransaction={handleAddTransaction}
+              onDeleteTransaction={handleDeleteTransaction}
+            />
           </div>
         )}
 
