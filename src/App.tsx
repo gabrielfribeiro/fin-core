@@ -310,13 +310,6 @@ export function App() {
 
   // KPIs calculation for authenticated view
   const kpis = calculateKPIs(records);
-  const availableMonths = records.map(r => ({
-    id: r.id,
-    label: `${r.month}/${r.year}`,
-    year: r.year,
-    month: r.month,
-    isCurrent: r.status === 'current'
-  }));
   const currentRecord = records.find(r => r.id === selectedMonthId) || 
                         records.find(r => r.status === 'current') || 
                         records[records.length - 1];
@@ -332,9 +325,6 @@ export function App() {
         onLogout={handleLogout}
         onOpenClosing={() => setIsClosingModalOpen(true)}
         isFirebaseReady={isFirebaseConfigured}
-        selectedMonthId={selectedMonthId}
-        onSelectMonth={setSelectedMonthId}
-        availableMonths={availableMonths}
       />
 
       {/* Auth Banner error if any */}
@@ -351,7 +341,7 @@ export function App() {
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-8">
         {activeTab === 'overview' && (
           <div className="space-y-8 animate-in fade-in duration-300">
-            <OverviewCards kpis={kpis} currentRecord={currentRecord} />
+            <OverviewCards kpis={kpis} />
             <FinancialCharts records={records} />
           </div>
         )}

@@ -6,7 +6,6 @@ import {
   Coins,
   CreditCard,
   CalendarCheck,
-  CalendarDays,
   LogIn, 
   LogOut, 
   ShieldCheck, 
@@ -22,9 +21,6 @@ interface NavbarProps {
   onLogout: () => void;
   onOpenClosing: () => void;
   isFirebaseReady: boolean;
-  selectedMonthId: string;
-  onSelectMonth: (monthId: string) => void;
-  availableMonths: { id: string; label: string; year: number; month: string; isCurrent?: boolean }[];
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -35,9 +31,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onLogout,
   onOpenClosing,
   isFirebaseReady,
-  selectedMonthId,
-  onSelectMonth,
-  availableMonths,
 }) => {
   return (
     <header className="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 w-full">
@@ -124,25 +117,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* User Auth Section & Closing Button */}
           <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
-            {/* Month Selector Dropdown */}
-            {user && availableMonths && availableMonths.length > 0 && (
-              <div className="flex items-center space-x-1.5 bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-300 hover:border-slate-700 transition">
-                <CalendarDays className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <select
-                  value={selectedMonthId}
-                  onChange={(e) => onSelectMonth(e.target.value)}
-                  aria-label="Mês de Referência"
-                  className="bg-transparent text-xs font-semibold text-white focus:outline-none cursor-pointer pr-1"
-                >
-                  {availableMonths.map((m) => (
-                    <option key={m.id} value={m.id} className="bg-slate-950 text-slate-200">
-                      {m.month}/{m.year} {m.isCurrent ? '• Atual' : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
             {/* Fechamento Dia 25 Button */}
             {user && (
               <button
